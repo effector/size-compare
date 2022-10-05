@@ -12166,12 +12166,14 @@ var __webpack_exports__ = {};
 (() => {
 "use strict";
 __nccwpck_require__.r(__webpack_exports__);
-/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(7954);
-/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(_actions_core__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _actions_github__WEBPACK_IMPORTED_MODULE_1__ = __nccwpck_require__(9939);
-/* harmony import */ var _actions_github__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__nccwpck_require__.n(_actions_github__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _actions_glob__WEBPACK_IMPORTED_MODULE_2__ = __nccwpck_require__(1770);
-/* harmony import */ var _actions_glob__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__nccwpck_require__.n(_actions_glob__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(7147);
+/* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(fs__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_1__ = __nccwpck_require__(7954);
+/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__nccwpck_require__.n(_actions_core__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _actions_github__WEBPACK_IMPORTED_MODULE_2__ = __nccwpck_require__(9939);
+/* harmony import */ var _actions_github__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__nccwpck_require__.n(_actions_github__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _actions_glob__WEBPACK_IMPORTED_MODULE_3__ = __nccwpck_require__(1770);
+/* harmony import */ var _actions_glob__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__nccwpck_require__.n(_actions_glob__WEBPACK_IMPORTED_MODULE_3__);
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -12184,19 +12186,24 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 
+
 const GIST_MAIN_FILE_NAME = 'main.json';
 const GIST_HISTORY_FILE_NAME = 'history.json';
 function main() {
     var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
-        const gistId = (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput)('gist-id', { required: true });
-        const token = (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput)('token', { required: true });
-        const files = (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput)('files', { required: true });
-        const { payload: { pull_request, repository, compare: compareLink, commits }, repo: { owner, repo }, sha, eventName, ref, } = _actions_github__WEBPACK_IMPORTED_MODULE_1__.context;
+        const gistId = (0,_actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput)('gist-id', { required: true });
+        const token = (0,_actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput)('token', { required: true });
+        const files = (0,_actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput)('files', { required: true });
+        const { payload: { pull_request, repository, compare: compareLink, commits }, repo: { owner, repo }, sha, eventName, ref, } = _actions_github__WEBPACK_IMPORTED_MODULE_2__.context;
         const masterBranch = repository === null || repository === void 0 ? void 0 : repository.master_branch;
-        const globber = yield (0,_actions_glob__WEBPACK_IMPORTED_MODULE_2__.create)(files, { omitBrokenSymbolicLinks: true });
+        const globber = yield (0,_actions_glob__WEBPACK_IMPORTED_MODULE_3__.create)(files, { omitBrokenSymbolicLinks: true });
         const rawList = yield globber.glob();
-        const list = rawList.map((path) => path.replace(process.cwd(), '.'));
+        const list = rawList.map((path) => ({
+            relative: path.replace(process.cwd(), '.'),
+            full: path,
+            size: fs__WEBPACK_IMPORTED_MODULE_0__.statSync(path).size,
+        }));
         console.log('>>', JSON.stringify({
             files,
             list,
@@ -12210,21 +12217,21 @@ function main() {
             eventName,
             masterBranch,
         }, null, 2));
-        const octokit = (0,_actions_github__WEBPACK_IMPORTED_MODULE_1__.getOctokit)(token);
+        const octokit = (0,_actions_github__WEBPACK_IMPORTED_MODULE_2__.getOctokit)(token);
         const gist = yield octokit.rest.gists.get({ gist_id: gistId });
         console.log('GIST', gist.data.files);
         const mainFileExists = Boolean((_a = gist.data.files) === null || _a === void 0 ? void 0 : _a[GIST_MAIN_FILE_NAME]);
         const historyFileExists = Boolean((_b = gist.data.files) === null || _b === void 0 ? void 0 : _b[GIST_HISTORY_FILE_NAME]);
         const time = new Date().toTimeString();
-        (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.setOutput)('time', time);
+        (0,_actions_core__WEBPACK_IMPORTED_MODULE_1__.setOutput)('time', time);
     });
 }
 main().catch((error) => {
     if (error instanceof Error) {
-        (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.setFailed)(error.message);
+        (0,_actions_core__WEBPACK_IMPORTED_MODULE_1__.setFailed)(error.message);
     }
     else {
-        (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.setFailed)(String(error));
+        (0,_actions_core__WEBPACK_IMPORTED_MODULE_1__.setFailed)(String(error));
     }
 });
 

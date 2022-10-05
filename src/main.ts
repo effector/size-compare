@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import * as path from 'path';
 import {getInput, setFailed, setOutput} from '@actions/core';
 import github, {context, getOctokit} from '@actions/github';
@@ -24,7 +25,11 @@ async function main() {
 
   const globber = await createGlob(files, {omitBrokenSymbolicLinks: true});
   const rawList = await globber.glob();
-  const list = rawList.map((path) => path.replace(process.cwd(), '.'));
+  const list = rawList.map((path) => ({
+    relative: path.replace(process.cwd(), '.'),
+    full: path,
+    size: fs.statSync(path).size,
+  }));
 
   console.log(
     '>>',
