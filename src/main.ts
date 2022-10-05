@@ -46,7 +46,7 @@ async function main() {
   const octokit = getOctokit(token);
 
   const gist = await octokit.rest.gists.get({gist_id: gistId});
-  console.log(gist);
+  console.log('GIST', gist.data.files);
 
   const time = new Date().toTimeString();
   setOutput('time', time);

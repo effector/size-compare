@@ -10123,7 +10123,7 @@ function main() {
         }, null, 2));
         const octokit = (0,github.getOctokit)(token);
         const gist = yield octokit.rest.gists.get({ gist_id: gistId });
-        console.log(gist);
+        console.log('GIST', gist.data.files);
         const time = new Date().toTimeString();
         (0,core.setOutput)('time', time);
         // Get the JSON webhook payload for the event that triggered the workflow
