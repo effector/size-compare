@@ -29,8 +29,9 @@ const HistoryFile = t.Record({
 });
 
 async function main() {
-  const gistId = getInput('gist-id', {required: true});
-  const token = getInput('token', {required: true});
+  const gistId = getInput('gist_id', {required: true});
+  const gistToken = getInput('gist_token', {required: true});
+  const githubToken = getInput('github_token', {required: false}) ?? gistToken;
   const files = getInput('files', {required: true});
 
   const {
@@ -52,8 +53,8 @@ async function main() {
     size: fs.statSync(path).size,
   }));
 
-  const gistOctokit = getOctokit(token);
-  const baseOctokit = getOctokit(process.env.GITHUB_TOKEN!);
+  const gistOctokit = getOctokit(gistToken);
+  const baseOctokit = getOctokit(githubToken);
 
   const gist = await gistOctokit.rest.gists.get({gist_id: gistId});
   const gistFiles: Record<string, {content: string; filename: string}> = {};

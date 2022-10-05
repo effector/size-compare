@@ -4,12 +4,15 @@ branding:
   icon: bar-chart-2
   color: blue
 inputs:
-  gist-id:
+  gist_id:
     description: Id of the GIST to save size to
     required: true
-  token:
-    description: A personal access token with "gist" and "repo" permissions. Should be stored as a Secret.
+  gist_token:
+    description: A personal access token with "gist" permission. Should be stored as a Secret.
     required: true
+  github_token:
+    description: A personal access token with "github" permission. Should be used standard token.
+    required: false
   files:
     description: A glob pattern where to find bundle files compare size for
     required: true

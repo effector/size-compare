@@ -14669,10 +14669,11 @@ const HistoryFile = lib.Record({
     history: lib.Array(HistoryRecord),
 });
 function main() {
-    var _a, _b;
+    var _a, _b, _c;
     return __awaiter(this, void 0, void 0, function* () {
-        const gistId = (0,core.getInput)('gist-id', { required: true });
-        const token = (0,core.getInput)('token', { required: true });
+        const gistId = (0,core.getInput)('gist_id', { required: true });
+        const gistToken = (0,core.getInput)('gist_token', { required: true });
+        const githubToken = (_a = (0,core.getInput)('github_token', { required: false })) !== null && _a !== void 0 ? _a : gistToken;
         const files = (0,core.getInput)('files', { required: true });
         const { payload: { pull_request, repository, compare: compareLink, commits }, repo: { owner, repo }, sha, eventName, ref, } = github.context;
         const masterBranch = repository === null || repository === void 0 ? void 0 : repository.master_branch;
@@ -14684,8 +14685,8 @@ function main() {
             full: path,
             size: external_fs_.statSync(path).size,
         }));
-        const gistOctokit = (0,github.getOctokit)(token);
-        const baseOctokit = (0,github.getOctokit)(process.env.GITHUB_TOKEN);
+        const gistOctokit = (0,github.getOctokit)(gistToken);
+        const baseOctokit = (0,github.getOctokit)(githubToken);
         const gist = yield gistOctokit.rest.gists.get({ gist_id: gistId });
         const gistFiles = {};
         // Read each file from gist to do not lose them on updating gist
@@ -14715,7 +14716,7 @@ function main() {
         const latestRecord = historyFileContent.history[0];
         if (pull_request) {
             const previousCommentPromise = fetchPreviousComment(baseOctokit, { owner, repo }, { number: pull_request.number });
-            const masterFiles = Object.assign({}, ((_a = latestRecord === null || latestRecord === void 0 ? void 0 : latestRecord.files) !== null && _a !== void 0 ? _a : {}));
+            const masterFiles = Object.assign({}, ((_b = latestRecord === null || latestRecord === void 0 ? void 0 : latestRecord.files) !== null && _b !== void 0 ? _b : {}));
             const prFiles = recordToList(currentHistoryRecord.files, 'path', 'size');
             const changes = [];
             prFiles.forEach(({ path, size }) => {
@@ -14804,7 +14805,7 @@ function main() {
         }
         if (!pull_request) {
             // check for the latest commit in the history
-            const alreadyCheckedSizeByHistory = ((_b = latestRecord === null || latestRecord === void 0 ? void 0 : latestRecord.commitsha) !== null && _b !== void 0 ? _b : '') === sha;
+            const alreadyCheckedSizeByHistory = ((_c = latestRecord === null || latestRecord === void 0 ? void 0 : latestRecord.commitsha) !== null && _c !== void 0 ? _c : '') === sha;
             if (!alreadyCheckedSizeByHistory) {
                 historyFileContent.history.unshift(currentHistoryRecord);
             }
