@@ -10,14 +10,9 @@ inputs:
   token:
     description: A personal access token with "gist" and "repo" permissions. Should be stored as a Secret.
     required: true
-  bundle-directory:
-    description: Files' directory compare size for
+  files:
+    description: A glob pattern where to find bundle files compare size for
     required: true
-  include:
-    description: If passed use this value as a glob pattern to filter files from "bundle-directory"
-    required: false
-  exclude:
-    description: A glob pattern to filter out files filtered by "include" from "bundle-directory"
 outputs:
   time: # id of output
     description: 'The time we greeted you'

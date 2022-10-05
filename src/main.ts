@@ -10,13 +10,10 @@ const GIST_HISTORY_FILE_NAME = 'history.json';
 async function main() {
   const gistId = getInput('gist-id', {required: true});
   const token = getInput('token', {required: true});
-  const bundleDirectory = path.resolve(
-    process.cwd(),
-    getInput('bundle-directory', {required: true}),
-  );
-
-  const include = getInput('include');
-  const exclude = getInput('exclude');
+  const files = getInput('files', {required: true})
+    .split('\n')
+    .map((pattern) => pattern.trim())
+    .filter(Boolean);
 
   const {
     payload: {pull_request, repository, compare: compareLink, commits},
@@ -34,7 +31,7 @@ async function main() {
     '>>',
     JSON.stringify(
       {
-        bundleDirectory,
+        files,
         pull_request,
         repository,
         owner,
