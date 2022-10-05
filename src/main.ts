@@ -82,6 +82,12 @@ async function main() {
   // check for the latest commit in the history
   // Note: a history is written in reversed chronological order: the latest is the first
   const alreadyCheckedSizeByHistory = historyFileContent.history[0]?.commitsha ?? '' === sha;
+  console.log(
+    'ALREADY CHECKED SIZE BY HISTORY',
+    alreadyCheckedSizeByHistory,
+    historyFileContent.history[0]?.commitsha,
+    sha,
+  );
 
   if (!alreadyCheckedSizeByHistory) {
     historyFileContent.history.unshift(historyRecord);
@@ -91,6 +97,12 @@ async function main() {
   gistFiles[GIST_HISTORY_FILE_NAME].content = updatedHistoryContent;
 
   // Do not commit GIST if no changes
+  console.log(
+    'HISTORY CHANGED',
+    updatedHistoryContent,
+    historyFile.content,
+    updatedHistoryContent !== historyFile.content,
+  );
   if (updatedHistoryContent !== historyFile.content) {
     console.log('History changed, updating GIST');
     await octokit.rest.gists.update({
