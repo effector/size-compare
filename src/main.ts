@@ -110,6 +110,7 @@ async function main() {
     const prFiles = recordToList(currentHistoryRecord.files, 'path', 'size');
 
     type ChangeState = 'modified' | 'added' | 'removed' | 'not changed';
+
     interface Change {
       state: ChangeState;
       path: string;
@@ -196,12 +197,14 @@ async function main() {
     function difference(a: number, b: number): number {
       return (Math.abs(a - b) / a) * Math.sign(b - a) * 100;
     }
+
     function signedFixedPercent(value: number): string {
       if (value === 0) {
         return '=';
       }
       return `${value > 0 ? '+' : ''}${value.toFixed(2)}%`;
     }
+
     function applyExists(value: number | null, fn: (value: number) => string) {
       if (value === null) return '';
       return fn(value);
@@ -264,28 +267,6 @@ async function main() {
       });
     }
   }
-
-  console.log(
-    '>>',
-    JSON.stringify(
-      {
-        commits,
-        files,
-        list: filesSizes,
-        pull_request,
-        repository,
-        owner,
-        repo,
-        ref,
-        sha,
-        compareLink,
-        eventName,
-        masterBranch,
-      },
-      null,
-      2,
-    ),
-  );
 }
 
 async function fetchPreviousComment(

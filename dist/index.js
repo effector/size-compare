@@ -15023,20 +15023,6 @@ function main() {
                 });
             }
         }
-        console.log('>>', JSON.stringify({
-            commits,
-            files,
-            list: filesSizes,
-            pull_request,
-            repository,
-            owner,
-            repo,
-            ref,
-            sha,
-            compareLink,
-            eventName,
-            masterBranch,
-        }, null, 2));
     });
 }
 function fetchPreviousComment(octokit, repo, pr) {
