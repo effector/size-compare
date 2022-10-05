@@ -200,7 +200,7 @@ async function main() {
       if (value === 0) {
         return '=';
       }
-      return `${value > 0 ? '+' : ''}${value.toFixed(2)}`;
+      return `${value > 0 ? '+' : ''}${value.toFixed(2)}%`;
     }
     function applyExists(value: number | null, fn: (value: number) => string) {
       if (value === null) return '';

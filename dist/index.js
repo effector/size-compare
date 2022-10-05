@@ -14968,7 +14968,7 @@ function main() {
                 if (value === 0) {
                     return '=';
                 }
-                return `${value > 0 ? '+' : ''}${value.toFixed(2)}`;
+                return `${value > 0 ? '+' : ''}${value.toFixed(2)}%`;
             }
             function applyExists(value, fn) {
                 if (value === null)
