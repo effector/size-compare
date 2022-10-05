@@ -14225,11 +14225,15 @@ function main() {
         });
         const historyFileContent = HistoryFile.check(JSON.parse(historyFile.content));
         // modifications of `historyFile` will be there
-        gistFiles[GIST_HISTORY_FILE_NAME].content = JSON.stringify(historyFileContent, null, 2);
-        yield octokit.rest.gists.update({
-            gist_id: gistId,
-            files: gistFiles,
-        });
+        const updatedHistoryContent = JSON.stringify(historyFileContent, null, 2);
+        gistFiles[GIST_HISTORY_FILE_NAME].content = updatedHistoryContent;
+        if (updatedHistoryContent !== historyFile.content) {
+            console.log('History changed, updating GIST');
+            yield octokit.rest.gists.update({
+                gist_id: gistId,
+                files: gistFiles,
+            });
+        }
         console.log('>>', JSON.stringify({
             files,
             list,

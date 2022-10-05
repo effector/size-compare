@@ -75,12 +75,16 @@ async function main() {
 
   // modifications of `historyFile` will be there
 
-  gistFiles[GIST_HISTORY_FILE_NAME].content = JSON.stringify(historyFileContent, null, 2);
+  const updatedHistoryContent = JSON.stringify(historyFileContent, null, 2);
+  gistFiles[GIST_HISTORY_FILE_NAME].content = updatedHistoryContent;
 
-  await octokit.rest.gists.update({
-    gist_id: gistId,
-    files: gistFiles,
-  });
+  if (updatedHistoryContent !== historyFile.content) {
+    console.log('History changed, updating GIST');
+    await octokit.rest.gists.update({
+      gist_id: gistId,
+      files: gistFiles,
+    });
+  }
 
   console.log(
     '>>',
