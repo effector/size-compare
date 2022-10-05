@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as t from 'runtypes';
-import {getInput, setFailed, setOutput} from '@actions/core';
+import {getInput, setFailed} from '@actions/core';
 import {context, getOctokit} from '@actions/github';
 import {create as createGlob} from '@actions/glob';
 import {markdownTable} from 'markdown-table';
@@ -52,9 +52,10 @@ async function main() {
     size: fs.statSync(path).size,
   }));
 
-  const octokit = getOctokit(token);
+  const gistOctokit = getOctokit(token);
+  const baseOctokit = getOctokit(process.env.GITHUB_TOKEN!);
 
-  const gist = await octokit.rest.gists.get({gist_id: gistId});
+  const gist = await gistOctokit.rest.gists.get({gist_id: gistId});
   const gistFiles: Record<string, {content: string; filename: string}> = {};
 
   // Read each file from gist to do not lose them on updating gist
@@ -87,7 +88,7 @@ async function main() {
 
   if (pull_request) {
     const previousCommentPromise = fetchPreviousComment(
-      octokit,
+      gistOctokit,
       {owner, repo},
       {number: pull_request.number},
     );
@@ -158,7 +159,7 @@ async function main() {
 
     if (previousComment) {
       try {
-        await octokit.rest.issues.updateComment({
+        await gistOctokit.rest.issues.updateComment({
           repo,
           owner,
           comment_id: previousComment.id,
@@ -172,7 +173,7 @@ async function main() {
       }
     } else {
       try {
-        await octokit.rest.issues.createComment({
+        await gistOctokit.rest.issues.createComment({
           repo,
           owner,
           issue_number: pull_request.number,
@@ -201,7 +202,7 @@ async function main() {
     // Do not commit GIST if no changes
     if (updatedHistoryContent !== originalFileContent) {
       console.log('History changed, updating GIST');
-      await octokit.rest.gists.update({
+      await gistOctokit.rest.gists.update({
         gist_id: gistId,
         files: gistFiles,
       });

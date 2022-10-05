@@ -14684,8 +14684,9 @@ function main() {
             full: path,
             size: external_fs_.statSync(path).size,
         }));
-        const octokit = (0,github.getOctokit)(token);
-        const gist = yield octokit.rest.gists.get({ gist_id: gistId });
+        const gistOctokit = (0,github.getOctokit)(token);
+        const baseOctokit = (0,github.getOctokit)(process.env.GITHUB_TOKEN);
+        const gist = yield gistOctokit.rest.gists.get({ gist_id: gistId });
         const gistFiles = {};
         // Read each file from gist to do not lose them on updating gist
         Object.keys(gist.data.files).forEach((key) => {
@@ -14713,7 +14714,7 @@ function main() {
         // Note: a history is written in reversed chronological order: the latest is the first
         const latestRecord = historyFileContent.history[0];
         if (pull_request) {
-            const previousCommentPromise = fetchPreviousComment(octokit, { owner, repo }, { number: pull_request.number });
+            const previousCommentPromise = fetchPreviousComment(gistOctokit, { owner, repo }, { number: pull_request.number });
             const masterFiles = Object.assign({}, ((_a = latestRecord === null || latestRecord === void 0 ? void 0 : latestRecord.files) !== null && _a !== void 0 ? _a : {}));
             const prFiles = recordToList(currentHistoryRecord.files, 'path', 'size');
             const changes = [];
@@ -14776,7 +14777,7 @@ function main() {
             const previousComment = yield previousCommentPromise;
             if (previousComment) {
                 try {
-                    yield octokit.rest.issues.updateComment({
+                    yield gistOctokit.rest.issues.updateComment({
                         repo,
                         owner,
                         comment_id: previousComment.id,
@@ -14789,7 +14790,7 @@ function main() {
             }
             else {
                 try {
-                    yield octokit.rest.issues.createComment({
+                    yield gistOctokit.rest.issues.createComment({
                         repo,
                         owner,
                         issue_number: pull_request.number,
@@ -14812,7 +14813,7 @@ function main() {
             // Do not commit GIST if no changes
             if (updatedHistoryContent !== originalFileContent) {
                 console.log('History changed, updating GIST');
-                yield octokit.rest.gists.update({
+                yield gistOctokit.rest.gists.update({
                     gist_id: gistId,
                     files: gistFiles,
                 });
