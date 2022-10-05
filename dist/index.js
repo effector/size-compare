@@ -12195,7 +12195,8 @@ function main() {
         const { payload: { pull_request, repository, compare: compareLink, commits }, repo: { owner, repo }, sha, eventName, ref, } = _actions_github__WEBPACK_IMPORTED_MODULE_1__.context;
         const masterBranch = repository === null || repository === void 0 ? void 0 : repository.master_branch;
         const globber = yield (0,_actions_glob__WEBPACK_IMPORTED_MODULE_2__.create)(files, { omitBrokenSymbolicLinks: true });
-        const list = yield globber.glob();
+        const rawList = yield globber.glob();
+        const list = rawList.map((path) => path.replace(process.cwd(), '.'));
         console.log('>>', JSON.stringify({
             files,
             list,

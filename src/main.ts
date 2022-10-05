@@ -23,7 +23,8 @@ async function main() {
   const masterBranch = repository?.master_branch;
 
   const globber = await createGlob(files, {omitBrokenSymbolicLinks: true});
-  const list = await globber.glob();
+  const rawList = await globber.glob();
+  const list = rawList.map((path) => path.replace(process.cwd(), '.'));
 
   console.log(
     '>>',
