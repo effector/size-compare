@@ -14516,6 +14516,127 @@ function toAlignment(value) {
     : 0
 }
 
+;// CONCATENATED MODULE: ./node_modules/.pnpm/pretty-bytes@6.0.0/node_modules/pretty-bytes/index.js
+const BYTE_UNITS = [
+	'B',
+	'kB',
+	'MB',
+	'GB',
+	'TB',
+	'PB',
+	'EB',
+	'ZB',
+	'YB',
+];
+
+const BIBYTE_UNITS = [
+	'B',
+	'kiB',
+	'MiB',
+	'GiB',
+	'TiB',
+	'PiB',
+	'EiB',
+	'ZiB',
+	'YiB',
+];
+
+const BIT_UNITS = [
+	'b',
+	'kbit',
+	'Mbit',
+	'Gbit',
+	'Tbit',
+	'Pbit',
+	'Ebit',
+	'Zbit',
+	'Ybit',
+];
+
+const BIBIT_UNITS = [
+	'b',
+	'kibit',
+	'Mibit',
+	'Gibit',
+	'Tibit',
+	'Pibit',
+	'Eibit',
+	'Zibit',
+	'Yibit',
+];
+
+/*
+Formats the given number using `Number#toLocaleString`.
+- If locale is a string, the value is expected to be a locale-key (for example: `de`).
+- If locale is true, the system default locale is used for translation.
+- If no value for locale is specified, the number is returned unmodified.
+*/
+const toLocaleString = (number, locale, options) => {
+	let result = number;
+	if (typeof locale === 'string' || Array.isArray(locale)) {
+		result = number.toLocaleString(locale, options);
+	} else if (locale === true || options !== undefined) {
+		result = number.toLocaleString(undefined, options);
+	}
+
+	return result;
+};
+
+function prettyBytes(number, options) {
+	if (!Number.isFinite(number)) {
+		throw new TypeError(`Expected a finite number, got ${typeof number}: ${number}`);
+	}
+
+	options = {
+		bits: false,
+		binary: false,
+		...options,
+	};
+
+	const UNITS = options.bits
+		? (options.binary ? BIBIT_UNITS : BIT_UNITS)
+		: (options.binary ? BIBYTE_UNITS : BYTE_UNITS);
+
+	if (options.signed && number === 0) {
+		return ` 0 ${UNITS[0]}`;
+	}
+
+	const isNegative = number < 0;
+	const prefix = isNegative ? '-' : (options.signed ? '+' : '');
+
+	if (isNegative) {
+		number = -number;
+	}
+
+	let localeOptions;
+
+	if (options.minimumFractionDigits !== undefined) {
+		localeOptions = {minimumFractionDigits: options.minimumFractionDigits};
+	}
+
+	if (options.maximumFractionDigits !== undefined) {
+		localeOptions = {maximumFractionDigits: options.maximumFractionDigits, ...localeOptions};
+	}
+
+	if (number < 1) {
+		const numberString = toLocaleString(number, options.locale, localeOptions);
+		return prefix + numberString + ' ' + UNITS[0];
+	}
+
+	const exponent = Math.min(Math.floor(options.binary ? Math.log(number) / Math.log(1024) : Math.log10(number) / 3), UNITS.length - 1);
+	number /= (options.binary ? 1024 : 1000) ** exponent;
+
+	if (!localeOptions) {
+		number = number.toPrecision(3);
+	}
+
+	const numberString = toLocaleString(Number(number), options.locale, localeOptions);
+
+	const unit = UNITS[exponent];
+
+	return prefix + numberString + ' ' + unit;
+}
+
 ;// CONCATENATED MODULE: ./src/main.ts
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -14532,9 +14653,10 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 
+
 const GIST_HISTORY_FILE_NAME = 'history.json';
 const GIST_PACKAGE_VERSION = 0;
-const SIZE_COMPARE_HEADING = '## 🚛 size-compare report';
+const SIZE_COMPARE_HEADING = '## 🚛 size-compare report'; // add link https://github.com/effector/size-compare
 const SizeCompareLiteral = lib.Literal(GIST_PACKAGE_VERSION);
 const FilesSizes = lib.Dictionary(lib.Number, 'string');
 const HistoryRecord = lib.Record({
@@ -14603,14 +14725,16 @@ function main() {
                         changes.push({
                             state: 'not changed',
                             path,
-                            diff: '0',
+                            diff: '',
+                            size,
                         });
                     }
                     else {
                         changes.push({
                             state: 'modified',
                             path,
-                            diff: String(difference),
+                            diff: prettyBytes(difference, { signed: true }),
+                            size,
                         });
                     }
                     delete masterFiles[path];
@@ -14619,7 +14743,8 @@ function main() {
                     changes.push({
                         state: 'added',
                         path,
-                        diff: String(size),
+                        diff: prettyBytes(size, { signed: true }),
+                        size,
                     });
                 }
             });
@@ -14627,14 +14752,25 @@ function main() {
                 changes.push({
                     state: 'removed',
                     path,
-                    diff: String(-size),
+                    diff: prettyBytes(-size, { signed: true }),
+                    size,
                 });
             });
             const commentBody = [
                 SIZE_COMPARE_HEADING,
                 markdownTable([
-                    ['State', 'File', 'Diff'],
-                    ...changes.map(({ state, path, diff }) => [state, path, diff]),
+                    ['File', 'State', 'Diff', 'Current size', 'Original size'],
+                    ...changes.map(({ state, path, diff, size }) => {
+                        var _a, _b;
+                        const originalSize = (_b = (_a = latestRecord === null || latestRecord === void 0 ? void 0 : latestRecord.files) === null || _a === void 0 ? void 0 : _a[path]) !== null && _b !== void 0 ? _b : 0;
+                        return [
+                            path,
+                            state,
+                            diff,
+                            prettyBytes(size),
+                            originalSize ? prettyBytes(originalSize) : '',
+                        ];
+                    }),
                 ]),
             ].join('\r\n');
             const previousComment = yield previousCommentPromise;

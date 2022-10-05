@@ -4,11 +4,12 @@ import {getInput, setFailed, setOutput} from '@actions/core';
 import {context, getOctokit} from '@actions/github';
 import {create as createGlob} from '@actions/glob';
 import {markdownTable} from 'markdown-table';
+import prettyBytes from 'pretty-bytes';
 
 const GIST_HISTORY_FILE_NAME = 'history.json';
 const GIST_PACKAGE_VERSION = 0;
 
-const SIZE_COMPARE_HEADING = '## 🚛 size-compare report';
+const SIZE_COMPARE_HEADING = '## 🚛 size-compare report'; // add link https://github.com/effector/size-compare
 
 const SizeCompareLiteral = t.Literal(GIST_PACKAGE_VERSION);
 
@@ -95,7 +96,7 @@ async function main() {
 
     type ChangeState = 'modified' | 'added' | 'removed' | 'not changed';
 
-    const changes: {state: ChangeState; path: string; diff: string}[] = [];
+    const changes: {state: ChangeState; path: string; diff: string; size: number}[] = [];
 
     prFiles.forEach(({path, size}) => {
       const masterFile = masterFiles[path];
@@ -105,13 +106,15 @@ async function main() {
           changes.push({
             state: 'not changed',
             path,
-            diff: '0',
+            diff: '',
+            size,
           });
         } else {
           changes.push({
             state: 'modified',
             path,
-            diff: String(difference),
+            diff: prettyBytes(difference, {signed: true}),
+            size,
           });
         }
         delete masterFiles[path];
@@ -119,7 +122,8 @@ async function main() {
         changes.push({
           state: 'added',
           path,
-          diff: String(size),
+          diff: prettyBytes(size, {signed: true}),
+          size,
         });
       }
     });
@@ -128,15 +132,25 @@ async function main() {
       changes.push({
         state: 'removed',
         path,
-        diff: String(-size),
+        diff: prettyBytes(-size, {signed: true}),
+        size,
       });
     });
 
     const commentBody = [
       SIZE_COMPARE_HEADING,
       markdownTable([
-        ['State', 'File', 'Diff'],
-        ...changes.map(({state, path, diff}) => [state, path, diff]),
+        ['File', 'State', 'Diff', 'Current size', 'Original size'],
+        ...changes.map(({state, path, diff, size}) => {
+          const originalSize = latestRecord?.files?.[path] ?? 0;
+          return [
+            path,
+            state,
+            diff,
+            prettyBytes(size),
+            originalSize ? prettyBytes(originalSize) : '',
+          ];
+        }),
       ]),
     ].join('\r\n');
 
