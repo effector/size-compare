@@ -14637,6 +14637,7 @@ function main() {
         if (!pull_request) {
             // check for the latest commit in the history
             const alreadyCheckedSizeByHistory = (_c = latestRecord === null || latestRecord === void 0 ? void 0 : latestRecord.commitsha) !== null && _c !== void 0 ? _c : '' === sha;
+            console.log('ALREADY CHECKED SIZE BY HISTORY', alreadyCheckedSizeByHistory, latestRecord === null || latestRecord === void 0 ? void 0 : latestRecord.commitsha, sha);
             if (!alreadyCheckedSizeByHistory) {
                 historyFileContent.history.unshift(currentHistoryRecord);
             }

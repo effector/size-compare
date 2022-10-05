@@ -137,6 +137,12 @@ async function main() {
     // check for the latest commit in the history
     const alreadyCheckedSizeByHistory = latestRecord?.commitsha ?? '' === sha;
 
+    console.log(
+      'ALREADY CHECKED SIZE BY HISTORY',
+      alreadyCheckedSizeByHistory,
+      latestRecord?.commitsha,
+      sha,
+    );
     if (!alreadyCheckedSizeByHistory) {
       historyFileContent.history.unshift(currentHistoryRecord);
     }
