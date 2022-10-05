@@ -81,7 +81,7 @@ async function main() {
 
   // check for the latest commit in the history
   // Note: a history is written in reversed chronological order: the latest is the first
-  const alreadyCheckedSizeByHistory = historyFileContent.history[0]?.commitsha === sha;
+  const alreadyCheckedSizeByHistory = historyFileContent.history[0]?.commitsha ?? '' === sha;
 
   if (!alreadyCheckedSizeByHistory) {
     historyFileContent.history.unshift(historyRecord);

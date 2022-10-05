@@ -14189,7 +14189,7 @@ const HistoryFile = runtypes__WEBPACK_IMPORTED_MODULE_1__.Record({
     history: runtypes__WEBPACK_IMPORTED_MODULE_1__.Array(HistoryRecord),
 });
 function main() {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
         const gistId = (0,_actions_core__WEBPACK_IMPORTED_MODULE_2__.getInput)('gist-id', { required: true });
         const token = (0,_actions_core__WEBPACK_IMPORTED_MODULE_2__.getInput)('token', { required: true });
@@ -14232,7 +14232,7 @@ function main() {
         const historyFileContent = HistoryFile.check(JSON.parse(historyFile.content));
         // check for the latest commit in the history
         // Note: a history is written in reversed chronological order: the latest is the first
-        const alreadyCheckedSizeByHistory = ((_a = historyFileContent.history[0]) === null || _a === void 0 ? void 0 : _a.commitsha) === sha;
+        const alreadyCheckedSizeByHistory = (_b = (_a = historyFileContent.history[0]) === null || _a === void 0 ? void 0 : _a.commitsha) !== null && _b !== void 0 ? _b : '' === sha;
         if (!alreadyCheckedSizeByHistory) {
             historyFileContent.history.unshift(historyRecord);
         }
