@@ -1,8 +1,8 @@
 import * as fs from 'fs';
+import * as t from 'runtypes';
 import {getInput, setFailed, setOutput} from '@actions/core';
 import {context, getOctokit} from '@actions/github';
 import {create as createGlob} from '@actions/glob';
-import t from 'runtypes';
 
 const GIST_HISTORY_FILE_NAME = 'history.json';
 const GIST_PACKAGE_VERSION = 0;

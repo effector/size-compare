@@ -14153,14 +14153,14 @@ var __webpack_exports__ = {};
 __nccwpck_require__.r(__webpack_exports__);
 /* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(7147);
 /* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(fs__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_1__ = __nccwpck_require__(7954);
-/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__nccwpck_require__.n(_actions_core__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _actions_github__WEBPACK_IMPORTED_MODULE_2__ = __nccwpck_require__(9939);
-/* harmony import */ var _actions_github__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__nccwpck_require__.n(_actions_github__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var _actions_glob__WEBPACK_IMPORTED_MODULE_3__ = __nccwpck_require__(1770);
-/* harmony import */ var _actions_glob__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__nccwpck_require__.n(_actions_glob__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var runtypes__WEBPACK_IMPORTED_MODULE_4__ = __nccwpck_require__(3574);
-/* harmony import */ var runtypes__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__nccwpck_require__.n(runtypes__WEBPACK_IMPORTED_MODULE_4__);
+/* harmony import */ var runtypes__WEBPACK_IMPORTED_MODULE_1__ = __nccwpck_require__(3574);
+/* harmony import */ var runtypes__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__nccwpck_require__.n(runtypes__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_2__ = __nccwpck_require__(7954);
+/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__nccwpck_require__.n(_actions_core__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _actions_github__WEBPACK_IMPORTED_MODULE_3__ = __nccwpck_require__(9939);
+/* harmony import */ var _actions_github__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__nccwpck_require__.n(_actions_github__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var _actions_glob__WEBPACK_IMPORTED_MODULE_4__ = __nccwpck_require__(1770);
+/* harmony import */ var _actions_glob__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__nccwpck_require__.n(_actions_glob__WEBPACK_IMPORTED_MODULE_4__);
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -14177,25 +14177,25 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 const GIST_HISTORY_FILE_NAME = 'history.json';
 const GIST_PACKAGE_VERSION = 0;
-const SizeCompareLiteral = runtypes__WEBPACK_IMPORTED_MODULE_4___default().Literal(GIST_PACKAGE_VERSION);
-const FilesSizes = runtypes__WEBPACK_IMPORTED_MODULE_4___default().Dictionary((runtypes__WEBPACK_IMPORTED_MODULE_4___default().Number));
-const HistoryRecord = runtypes__WEBPACK_IMPORTED_MODULE_4___default().Record({
-    unixtimestamp: (runtypes__WEBPACK_IMPORTED_MODULE_4___default().Number),
-    commitsha: (runtypes__WEBPACK_IMPORTED_MODULE_4___default().String),
+const SizeCompareLiteral = runtypes__WEBPACK_IMPORTED_MODULE_1__.Literal(GIST_PACKAGE_VERSION);
+const FilesSizes = runtypes__WEBPACK_IMPORTED_MODULE_1__.Dictionary(runtypes__WEBPACK_IMPORTED_MODULE_1__.Number);
+const HistoryRecord = runtypes__WEBPACK_IMPORTED_MODULE_1__.Record({
+    unixtimestamp: runtypes__WEBPACK_IMPORTED_MODULE_1__.Number,
+    commitsha: runtypes__WEBPACK_IMPORTED_MODULE_1__.String,
     files: FilesSizes,
 });
-const HistoryFile = runtypes__WEBPACK_IMPORTED_MODULE_4___default().Record({
+const HistoryFile = runtypes__WEBPACK_IMPORTED_MODULE_1__.Record({
     'size-compare': SizeCompareLiteral,
-    history: runtypes__WEBPACK_IMPORTED_MODULE_4___default().Array(HistoryRecord),
+    history: runtypes__WEBPACK_IMPORTED_MODULE_1__.Array(HistoryRecord),
 });
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
-        const gistId = (0,_actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput)('gist-id', { required: true });
-        const token = (0,_actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput)('token', { required: true });
-        const files = (0,_actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput)('files', { required: true });
-        const { payload: { pull_request, repository, compare: compareLink, commits }, repo: { owner, repo }, sha, eventName, ref, } = _actions_github__WEBPACK_IMPORTED_MODULE_2__.context;
+        const gistId = (0,_actions_core__WEBPACK_IMPORTED_MODULE_2__.getInput)('gist-id', { required: true });
+        const token = (0,_actions_core__WEBPACK_IMPORTED_MODULE_2__.getInput)('token', { required: true });
+        const files = (0,_actions_core__WEBPACK_IMPORTED_MODULE_2__.getInput)('files', { required: true });
+        const { payload: { pull_request, repository, compare: compareLink, commits }, repo: { owner, repo }, sha, eventName, ref, } = _actions_github__WEBPACK_IMPORTED_MODULE_3__.context;
         const masterBranch = repository === null || repository === void 0 ? void 0 : repository.master_branch;
-        const globber = yield (0,_actions_glob__WEBPACK_IMPORTED_MODULE_3__.create)(files, { omitBrokenSymbolicLinks: true });
+        const globber = yield (0,_actions_glob__WEBPACK_IMPORTED_MODULE_4__.create)(files, { omitBrokenSymbolicLinks: true });
         const rawList = yield globber.glob();
         const list = rawList.map((path) => ({
             name: path.replace(process.cwd() + '/', ''),
@@ -14203,7 +14203,7 @@ function main() {
             full: path,
             size: fs__WEBPACK_IMPORTED_MODULE_0__.statSync(path).size,
         }));
-        const octokit = (0,_actions_github__WEBPACK_IMPORTED_MODULE_2__.getOctokit)(token);
+        const octokit = (0,_actions_github__WEBPACK_IMPORTED_MODULE_3__.getOctokit)(token);
         const gist = yield octokit.rest.gists.get({ gist_id: gistId });
         console.log('GIST', gist.data.files);
         const gistFiles = {};
@@ -14244,7 +14244,7 @@ function main() {
             masterBranch,
         }, null, 2));
         const time = new Date().toTimeString();
-        (0,_actions_core__WEBPACK_IMPORTED_MODULE_1__.setOutput)('time', time);
+        (0,_actions_core__WEBPACK_IMPORTED_MODULE_2__.setOutput)('time', time);
         // Get the JSON webhook payload for the event that triggered the workflow
         // const payload = JSON.stringify(context.payload, undefined, 2);
         // console.log(`The event payload: ${payload}`);
@@ -14258,10 +14258,10 @@ function main() {
 }
 main().catch((error) => {
     if (error instanceof Error) {
-        (0,_actions_core__WEBPACK_IMPORTED_MODULE_1__.setFailed)(error.message);
+        (0,_actions_core__WEBPACK_IMPORTED_MODULE_2__.setFailed)(error.message);
     }
     else {
-        (0,_actions_core__WEBPACK_IMPORTED_MODULE_1__.setFailed)(String(error));
+        (0,_actions_core__WEBPACK_IMPORTED_MODULE_2__.setFailed)(String(error));
     }
 });
 function getOrCreate(record, key, defaultValue) {
