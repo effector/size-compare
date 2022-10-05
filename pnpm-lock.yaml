@@ -11,6 +11,7 @@ specifiers:
   husky: ^8.0.1
   markdown-table: 3.0.2
   prettier: ^2.7.1
+  runtypes: ^6.6.0
   typescript: ^4.8.4
 
 dependencies:
@@ -26,6 +27,7 @@ devDependencies:
   '@vercel/ncc': 0.34.0
   husky: 8.0.1
   prettier: 2.7.1
+  runtypes: 6.6.0
   typescript: 4.8.4
 
 packages:
@@ -783,6 +785,10 @@ packages:
     resolution: {integrity: sha512-ujppO+MkdPqoVINuDFDRLClm7D78qbDt0/NR+wp5FqEZOoTNAjPHWj17QRhu7geIHJfcNhRk1XVQmF8Bp3ye+g==}
     engines: {node: '>=10.13.0'}
     hasBin: true
+    dev: true
+
+  /runtypes/6.6.0:
+    resolution: {integrity: sha512-ddM7sgB3fyboDlBzEYFQ04L674sKjbs4GyW2W32N/5Ae47NRd/GyMASPC2PFw8drPHYGEcZ0mZ26r5RcB8msfQ==}
     dev: true
 
   /safe-buffer/5.1.2:

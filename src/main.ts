@@ -1,12 +1,28 @@
 import * as fs from 'fs';
-import * as path from 'path';
 import {getInput, setFailed, setOutput} from '@actions/core';
-import github, {context, getOctokit} from '@actions/github';
+import {context, getOctokit} from '@actions/github';
 import {create as createGlob} from '@actions/glob';
-import {markdownTable} from 'markdown-table';
+import t from 'runtypes';
 
-const GIST_MAIN_FILE_NAME = 'main.json';
 const GIST_HISTORY_FILE_NAME = 'history.json';
+const GIST_PACKAGE_VERSION = 0;
+
+const SizeCompareLiteral = t.Literal(GIST_PACKAGE_VERSION);
+
+const FilesSizes = t.Dictionary(t.Number);
+
+const HistoryRecord = t.Record({
+  unixtimestamp: t.Number,
+  commitsha: t.String,
+  files: FilesSizes,
+});
+
+type HistoryRecord = t.Static<typeof HistoryRecord>;
+
+const HistoryFile = t.Record({
+  'size-compare': SizeCompareLiteral,
+  history: t.Array(HistoryRecord),
+});
 
 async function main() {
   const gistId = getInput('gist-id', {required: true});
@@ -26,10 +42,45 @@ async function main() {
   const globber = await createGlob(files, {omitBrokenSymbolicLinks: true});
   const rawList = await globber.glob();
   const list = rawList.map((path) => ({
-    relative: path.replace(process.cwd() + '/', ''),
+    name: path.replace(process.cwd() + '/', ''),
+    relative: path.replace(process.cwd(), '.'),
     full: path,
     size: fs.statSync(path).size,
   }));
+
+  const octokit = getOctokit(token);
+
+  const gist = await octokit.rest.gists.get({gist_id: gistId});
+  console.log('GIST', gist.data.files);
+
+  const gistFiles: Record<string, {content: string; filename: string}> = {};
+
+  // Read each file from gist to do not lose them on updating gist
+  Object.keys(gist.data.files!).forEach((key) => {
+    const file = gist.data.files?.[key];
+    if (file) {
+      const filename = file.filename ?? key;
+      gistFiles[filename] = {
+        filename,
+        content: file.content ?? '',
+      };
+    }
+  });
+
+  const historyFile = getOrCreate(gistFiles, GIST_HISTORY_FILE_NAME, {
+    filename: GIST_HISTORY_FILE_NAME,
+    content: `{"size-compare": ${GIST_PACKAGE_VERSION}, "history": []}`,
+  });
+  const historyFileContent = HistoryFile.check(JSON.parse(historyFile.content));
+
+  // modifications of `historyFile` will be there
+
+  gistFiles[GIST_HISTORY_FILE_NAME].content = JSON.stringify(historyFileContent, null, 2);
+
+  await octokit.rest.gists.update({
+    gist_id: gistId,
+    files: gistFiles,
+  });
 
   console.log(
     '>>',
@@ -52,13 +103,6 @@ async function main() {
     ),
   );
 
-  const octokit = getOctokit(token);
-
-  const gist = await octokit.rest.gists.get({gist_id: gistId});
-  console.log('GIST', gist.data.files);
-  const mainFileExists = Boolean(gist.data.files?.[GIST_MAIN_FILE_NAME]);
-  const historyFileExists = Boolean(gist.data.files?.[GIST_HISTORY_FILE_NAME]);
-
   const time = new Date().toTimeString();
   setOutput('time', time);
   // Get the JSON webhook payload for the event that triggered the workflow
@@ -79,3 +123,10 @@ main().catch((error) => {
     setFailed(String(error));
   }
 });
+
+function getOrCreate<T>(record: Record<string, T>, key: string, defaultValue: T): T {
+  if (!record[key]) {
+    record[key] = defaultValue;
+  }
+  return record[key];
+}
