@@ -26,7 +26,7 @@ async function main() {
   const globber = await createGlob(files, {omitBrokenSymbolicLinks: true});
   const rawList = await globber.glob();
   const list = rawList.map((path) => ({
-    relative: path.replace(process.cwd(), '.'),
+    relative: path.replace(process.cwd() + '/', ''),
     full: path,
     size: fs.statSync(path).size,
   }));

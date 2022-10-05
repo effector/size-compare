@@ -12200,7 +12200,7 @@ function main() {
         const globber = yield (0,_actions_glob__WEBPACK_IMPORTED_MODULE_3__.create)(files, { omitBrokenSymbolicLinks: true });
         const rawList = yield globber.glob();
         const list = rawList.map((path) => ({
-            relative: path.replace(process.cwd(), '.'),
+            relative: path.replace(process.cwd() + '/', ''),
             full: path,
             size: fs__WEBPACK_IMPORTED_MODULE_0__.statSync(path).size,
         }));
