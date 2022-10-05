@@ -11,14 +11,8 @@ async function main() {
     getInput('bundle-directory', {required: true}),
   );
 
-  const mainBranch = getInput('main-branch');
   const include = getInput('include');
   const exclude = getInput('exclude');
-
-  const octokit = getOctokit(token);
-
-  const gist = await octokit.rest.gists.get({gist_id: gistId});
-  console.log(gist);
 
   const {
     payload: {pull_request, repository},
@@ -27,6 +21,8 @@ async function main() {
     action,
     eventName,
   } = context;
+
+  const masterBranch = repository?.master_branch;
 
   console.log(
     '>>',
@@ -38,11 +34,17 @@ async function main() {
         sha,
         action,
         eventName,
+        masterBranch,
       },
       null,
       2,
     ),
   );
+
+  const octokit = getOctokit(token);
+
+  const gist = await octokit.rest.gists.get({gist_id: gistId});
+  console.log(gist);
 
   const time = new Date().toTimeString();
   setOutput('time', time);

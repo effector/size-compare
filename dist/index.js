@@ -10106,13 +10106,10 @@ function main() {
         const gistId = (0,core.getInput)('gist-id', { required: true });
         const token = (0,core.getInput)('token', { required: true });
         const bundleDirectory = external_path_.resolve(process.cwd(), (0,core.getInput)('bundle-directory', { required: true }));
-        const mainBranch = (0,core.getInput)('main-branch');
         const include = (0,core.getInput)('include');
         const exclude = (0,core.getInput)('exclude');
-        const octokit = (0,github.getOctokit)(token);
-        const gist = yield octokit.rest.gists.get({ gist_id: gistId });
-        console.log(gist);
         const { payload: { pull_request, repository }, repo, sha, action, eventName, } = github.context;
+        const masterBranch = repository === null || repository === void 0 ? void 0 : repository.master_branch;
         console.log('>>', JSON.stringify({
             pull_request,
             repository,
@@ -10120,7 +10117,11 @@ function main() {
             sha,
             action,
             eventName,
+            masterBranch,
         }, null, 2));
+        const octokit = (0,github.getOctokit)(token);
+        const gist = yield octokit.rest.gists.get({ gist_id: gistId });
+        console.log(gist);
         const time = new Date().toTimeString();
         (0,core.setOutput)('time', time);
         // Get the JSON webhook payload for the event that triggered the workflow

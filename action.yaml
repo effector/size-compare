@@ -13,9 +13,6 @@ inputs:
   bundle-directory:
     description: Files' directory compare size for
     required: true
-  main-branch:
-    description: Name of the main branch to compare with
-    default: 'main'
   include:
     description: If passed use this value as a glob pattern to filter files from "bundle-directory"
     required: false
