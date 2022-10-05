@@ -14669,7 +14669,7 @@ const HistoryFile = lib.Record({
     history: lib.Array(HistoryRecord),
 });
 function main() {
-    var _a, _b, _c;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
         const gistId = (0,core.getInput)('gist-id', { required: true });
         const token = (0,core.getInput)('token', { required: true });
@@ -14748,7 +14748,7 @@ function main() {
                     });
                 }
             });
-            recordToList((_b = latestRecord === null || latestRecord === void 0 ? void 0 : latestRecord.files) !== null && _b !== void 0 ? _b : {}, 'path', 'size').forEach(({ path, size }) => {
+            recordToList(masterFiles, 'path', 'size').forEach(({ path, size }) => {
                 changes.push({
                     state: 'removed',
                     path,
@@ -14803,7 +14803,7 @@ function main() {
         }
         if (!pull_request) {
             // check for the latest commit in the history
-            const alreadyCheckedSizeByHistory = ((_c = latestRecord === null || latestRecord === void 0 ? void 0 : latestRecord.commitsha) !== null && _c !== void 0 ? _c : '') === sha;
+            const alreadyCheckedSizeByHistory = ((_b = latestRecord === null || latestRecord === void 0 ? void 0 : latestRecord.commitsha) !== null && _b !== void 0 ? _b : '') === sha;
             if (!alreadyCheckedSizeByHistory) {
                 historyFileContent.history.unshift(currentHistoryRecord);
             }

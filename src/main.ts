@@ -128,7 +128,7 @@ async function main() {
       }
     });
 
-    recordToList(latestRecord?.files ?? {}, 'path', 'size').forEach(({path, size}) => {
+    recordToList(masterFiles, 'path', 'size').forEach(({path, size}) => {
       changes.push({
         state: 'removed',
         path,
