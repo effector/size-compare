@@ -1,6 +1,7 @@
 import * as path from 'path';
 import {getInput, setFailed, setOutput} from '@actions/core';
 import github, {context, getOctokit} from '@actions/github';
+import {create as createGlob} from '@actions/glob';
 import {markdownTable} from 'markdown-table';
 
 const GIST_MAIN_FILE_NAME = 'main.json';
@@ -27,10 +28,13 @@ async function main() {
 
   const masterBranch = repository?.master_branch;
 
+  const globber = await createGlob('**', {omitBrokenSymbolicLinks: true});
+
   console.log(
     '>>',
     JSON.stringify(
       {
+        bundleDirectory,
         pull_request,
         repository,
         owner,
