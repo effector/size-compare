@@ -3,13 +3,14 @@ import * as t from 'runtypes';
 import {getInput, setFailed, setOutput} from '@actions/core';
 import {context, getOctokit} from '@actions/github';
 import {create as createGlob} from '@actions/glob';
+import {markdownTable} from 'markdown-table';
 
 const GIST_HISTORY_FILE_NAME = 'history.json';
 const GIST_PACKAGE_VERSION = 0;
 
 const SizeCompareLiteral = t.Literal(GIST_PACKAGE_VERSION);
 
-const FilesSizes = t.Dictionary(t.Number);
+const FilesSizes = t.Dictionary(t.Number, 'string');
 
 const HistoryRecord = t.Record({
   unixtimestamp: t.Number,
@@ -51,8 +52,6 @@ async function main() {
   const octokit = getOctokit(token);
 
   const gist = await octokit.rest.gists.get({gist_id: gistId});
-  console.log('GIST', gist.data.files);
-
   const gistFiles: Record<string, {content: string; filename: string}> = {};
 
   // Read each file from gist to do not lose them on updating gist
@@ -67,7 +66,7 @@ async function main() {
     }
   });
 
-  const historyRecord: HistoryRecord = {
+  const currentHistoryRecord: HistoryRecord = {
     unixtimestamp: Date.now(),
     commitsha: sha,
     files: Object.fromEntries(filesSizes.map((file) => [file.name, file.size])),
@@ -80,24 +79,79 @@ async function main() {
   const originalFileContent = historyFile.content;
   const historyFileContent = HistoryFile.check(JSON.parse(originalFileContent));
 
-  // check for the latest commit in the history
   // Note: a history is written in reversed chronological order: the latest is the first
-  const alreadyCheckedSizeByHistory = historyFileContent.history[0]?.commitsha ?? '' === sha;
+  const latestRecord = historyFileContent.history[0];
 
-  if (!alreadyCheckedSizeByHistory) {
-    historyFileContent.history.unshift(historyRecord);
+  if (pull_request) {
+    const masterFiles = latestRecord?.files ?? {};
+    const prFiles = recordToList(currentHistoryRecord.files, 'path', 'size');
+
+    type ChangeState = 'modified' | 'added' | 'removed' | 'not changed';
+
+    const changes: {state: ChangeState; path: string; diff: string}[] = [];
+
+    prFiles.forEach(({path, size}) => {
+      const masterFile = masterFiles[path];
+      if (typeof masterFile !== 'undefined') {
+        const difference = size - masterFile;
+        if (difference === 0) {
+          changes.push({
+            state: 'not changed',
+            path,
+            diff: '0',
+          });
+        } else {
+          changes.push({
+            state: 'modified',
+            path,
+            diff: String(difference),
+          });
+        }
+        delete masterFiles[path];
+      } else {
+        changes.push({
+          state: 'added',
+          path,
+          diff: String(size),
+        });
+      }
+    });
+
+    recordToList(latestRecord?.files ?? {}, 'path', 'size').forEach(({path, size}) => {
+      changes.push({
+        state: 'removed',
+        path,
+        diff: String(-size),
+      });
+    });
+
+    const md = markdownTable([
+      ['State', 'File', 'Diff'],
+      ...changes.map(({state, path, diff}) => [state, path, diff]),
+    ]);
+
+    console.log(md);
   }
 
-  const updatedHistoryContent = JSON.stringify(historyFileContent, null, 2);
-  historyFile.content = updatedHistoryContent;
+  if (!pull_request) {
+    // check for the latest commit in the history
+    const alreadyCheckedSizeByHistory = latestRecord?.commitsha ?? '' === sha;
 
-  // Do not commit GIST if no changes
-  if (updatedHistoryContent !== originalFileContent) {
-    console.log('History changed, updating GIST');
-    await octokit.rest.gists.update({
-      gist_id: gistId,
-      files: gistFiles,
-    });
+    if (!alreadyCheckedSizeByHistory) {
+      historyFileContent.history.unshift(currentHistoryRecord);
+    }
+
+    const updatedHistoryContent = JSON.stringify(historyFileContent, null, 2);
+    historyFile.content = updatedHistoryContent;
+
+    // Do not commit GIST if no changes
+    if (updatedHistoryContent !== originalFileContent) {
+      console.log('History changed, updating GIST');
+      await octokit.rest.gists.update({
+        gist_id: gistId,
+        files: gistFiles,
+      });
+    }
   }
 
   console.log(
@@ -147,4 +201,17 @@ function getOrCreate<T>(record: Record<string, T>, key: string, defaultValue: T)
     record[key] = defaultValue;
   }
   return record[key];
+}
+
+type RecordedItem<K extends string, V extends string, T> = Record<K, string> & Record<V, T>;
+
+function recordToList<T, K extends string, V extends string>(
+  record: Record<string, T>,
+  key: K,
+  value: V,
+): Array<RecordedItem<K, V, T>> {
+  return Object.entries(record).map(([k, v]) => ({
+    [key]: k,
+    [value]: v,
+  })) as Array<RecordedItem<K, V, T>>;
 }

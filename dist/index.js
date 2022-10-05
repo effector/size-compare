@@ -14101,35 +14101,6 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 	}
 /******/ 	
 /************************************************************************/
-/******/ 	/* webpack/runtime/compat get default export */
-/******/ 	(() => {
-/******/ 		// getDefaultExport function for compatibility with non-harmony modules
-/******/ 		__nccwpck_require__.n = (module) => {
-/******/ 			var getter = module && module.__esModule ?
-/******/ 				() => (module['default']) :
-/******/ 				() => (module);
-/******/ 			__nccwpck_require__.d(getter, { a: getter });
-/******/ 			return getter;
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/define property getters */
-/******/ 	(() => {
-/******/ 		// define getter functions for harmony exports
-/******/ 		__nccwpck_require__.d = (exports, definition) => {
-/******/ 			for(var key in definition) {
-/******/ 				if(__nccwpck_require__.o(definition, key) && !__nccwpck_require__.o(exports, key)) {
-/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
-/******/ 				}
-/******/ 			}
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
-/******/ 	(() => {
-/******/ 		__nccwpck_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
-/******/ 	})();
-/******/ 	
 /******/ 	/* webpack/runtime/make namespace object */
 /******/ 	(() => {
 /******/ 		// define __esModule on exports
@@ -14150,17 +14121,402 @@ var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be in strict mode.
 (() => {
 "use strict";
+// ESM COMPAT FLAG
 __nccwpck_require__.r(__webpack_exports__);
-/* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(7147);
-/* harmony import */ var fs__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(fs__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var runtypes__WEBPACK_IMPORTED_MODULE_1__ = __nccwpck_require__(3574);
-/* harmony import */ var runtypes__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__nccwpck_require__.n(runtypes__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_2__ = __nccwpck_require__(7954);
-/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__nccwpck_require__.n(_actions_core__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var _actions_github__WEBPACK_IMPORTED_MODULE_3__ = __nccwpck_require__(9939);
-/* harmony import */ var _actions_github__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__nccwpck_require__.n(_actions_github__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var _actions_glob__WEBPACK_IMPORTED_MODULE_4__ = __nccwpck_require__(1770);
-/* harmony import */ var _actions_glob__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__nccwpck_require__.n(_actions_glob__WEBPACK_IMPORTED_MODULE_4__);
+
+// EXTERNAL MODULE: external "fs"
+var external_fs_ = __nccwpck_require__(7147);
+// EXTERNAL MODULE: ./node_modules/.pnpm/runtypes@6.6.0/node_modules/runtypes/lib/index.js
+var lib = __nccwpck_require__(3574);
+// EXTERNAL MODULE: ./node_modules/.pnpm/@actions+core@1.10.0/node_modules/@actions/core/lib/core.js
+var core = __nccwpck_require__(7954);
+// EXTERNAL MODULE: ./node_modules/.pnpm/@actions+github@5.1.1/node_modules/@actions/github/lib/github.js
+var github = __nccwpck_require__(9939);
+// EXTERNAL MODULE: ./node_modules/.pnpm/@actions+glob@0.3.0/node_modules/@actions/glob/lib/glob.js
+var glob = __nccwpck_require__(1770);
+;// CONCATENATED MODULE: ./node_modules/.pnpm/markdown-table@3.0.2/node_modules/markdown-table/index.js
+/**
+ * @typedef Options
+ *   Configuration (optional).
+ * @property {string|null|Array<string|null|undefined>} [align]
+ *   One style for all columns, or styles for their respective columns.
+ *   Each style is either `'l'` (left), `'r'` (right), or `'c'` (center).
+ *   Other values are treated as `''`, which doesn’t place the colon in the
+ *   alignment row but does align left.
+ *   *Only the lowercased first character is used, so `Right` is fine.*
+ * @property {boolean} [padding=true]
+ *   Whether to add a space of padding between delimiters and cells.
+ *
+ *   When `true`, there is padding:
+ *
+ *   ```markdown
+ *   | Alpha | B     |
+ *   | ----- | ----- |
+ *   | C     | Delta |
+ *   ```
+ *
+ *   When `false`, there is no padding:
+ *
+ *   ```markdown
+ *   |Alpha|B    |
+ *   |-----|-----|
+ *   |C    |Delta|
+ *   ```
+ * @property {boolean} [delimiterStart=true]
+ *   Whether to begin each row with the delimiter.
+ *
+ *   > 👉 **Note**: please don’t use this: it could create fragile structures
+ *   > that aren’t understandable to some markdown parsers.
+ *
+ *   When `true`, there are starting delimiters:
+ *
+ *   ```markdown
+ *   | Alpha | B     |
+ *   | ----- | ----- |
+ *   | C     | Delta |
+ *   ```
+ *
+ *   When `false`, there are no starting delimiters:
+ *
+ *   ```markdown
+ *   Alpha | B     |
+ *   ----- | ----- |
+ *   C     | Delta |
+ *   ```
+ * @property {boolean} [delimiterEnd=true]
+ *   Whether to end each row with the delimiter.
+ *
+ *   > 👉 **Note**: please don’t use this: it could create fragile structures
+ *   > that aren’t understandable to some markdown parsers.
+ *
+ *   When `true`, there are ending delimiters:
+ *
+ *   ```markdown
+ *   | Alpha | B     |
+ *   | ----- | ----- |
+ *   | C     | Delta |
+ *   ```
+ *
+ *   When `false`, there are no ending delimiters:
+ *
+ *   ```markdown
+ *   | Alpha | B
+ *   | ----- | -----
+ *   | C     | Delta
+ *   ```
+ * @property {boolean} [alignDelimiters=true]
+ *   Whether to align the delimiters.
+ *   By default, they are aligned:
+ *
+ *   ```markdown
+ *   | Alpha | B     |
+ *   | ----- | ----- |
+ *   | C     | Delta |
+ *   ```
+ *
+ *   Pass `false` to make them staggered:
+ *
+ *   ```markdown
+ *   | Alpha | B |
+ *   | - | - |
+ *   | C | Delta |
+ *   ```
+ * @property {(value: string) => number} [stringLength]
+ *   Function to detect the length of table cell content.
+ *   This is used when aligning the delimiters (`|`) between table cells.
+ *   Full-width characters and emoji mess up delimiter alignment when viewing
+ *   the markdown source.
+ *   To fix this, you can pass this function, which receives the cell content
+ *   and returns its “visible” size.
+ *   Note that what is and isn’t visible depends on where the text is displayed.
+ *
+ *   Without such a function, the following:
+ *
+ *   ```js
+ *   markdownTable([
+ *     ['Alpha', 'Bravo'],
+ *     ['中文', 'Charlie'],
+ *     ['👩‍❤️‍👩', 'Delta']
+ *   ])
+ *   ```
+ *
+ *   Yields:
+ *
+ *   ```markdown
+ *   | Alpha | Bravo |
+ *   | - | - |
+ *   | 中文 | Charlie |
+ *   | 👩‍❤️‍👩 | Delta |
+ *   ```
+ *
+ *   With [`string-width`](https://github.com/sindresorhus/string-width):
+ *
+ *   ```js
+ *   import stringWidth from 'string-width'
+ *
+ *   markdownTable(
+ *     [
+ *       ['Alpha', 'Bravo'],
+ *       ['中文', 'Charlie'],
+ *       ['👩‍❤️‍👩', 'Delta']
+ *     ],
+ *     {stringLength: stringWidth}
+ *   )
+ *   ```
+ *
+ *   Yields:
+ *
+ *   ```markdown
+ *   | Alpha | Bravo   |
+ *   | ----- | ------- |
+ *   | 中文  | Charlie |
+ *   | 👩‍❤️‍👩    | Delta   |
+ *   ```
+ */
+
+/**
+ * @typedef {Options} MarkdownTableOptions
+ * @todo
+ *   Remove next major.
+ */
+
+/**
+ * Generate a markdown ([GFM](https://docs.github.com/en/github/writing-on-github/working-with-advanced-formatting/organizing-information-with-tables)) table..
+ *
+ * @param {Array<Array<string|null|undefined>>} table
+ *   Table data (matrix of strings).
+ * @param {Options} [options]
+ *   Configuration (optional).
+ * @returns {string}
+ */
+function markdownTable(table, options = {}) {
+  const align = (options.align || []).concat()
+  const stringLength = options.stringLength || defaultStringLength
+  /** @type {Array<number>} Character codes as symbols for alignment per column. */
+  const alignments = []
+  /** @type {Array<Array<string>>} Cells per row. */
+  const cellMatrix = []
+  /** @type {Array<Array<number>>} Sizes of each cell per row. */
+  const sizeMatrix = []
+  /** @type {Array<number>} */
+  const longestCellByColumn = []
+  let mostCellsPerRow = 0
+  let rowIndex = -1
+
+  // This is a superfluous loop if we don’t align delimiters, but otherwise we’d
+  // do superfluous work when aligning, so optimize for aligning.
+  while (++rowIndex < table.length) {
+    /** @type {Array<string>} */
+    const row = []
+    /** @type {Array<number>} */
+    const sizes = []
+    let columnIndex = -1
+
+    if (table[rowIndex].length > mostCellsPerRow) {
+      mostCellsPerRow = table[rowIndex].length
+    }
+
+    while (++columnIndex < table[rowIndex].length) {
+      const cell = serialize(table[rowIndex][columnIndex])
+
+      if (options.alignDelimiters !== false) {
+        const size = stringLength(cell)
+        sizes[columnIndex] = size
+
+        if (
+          longestCellByColumn[columnIndex] === undefined ||
+          size > longestCellByColumn[columnIndex]
+        ) {
+          longestCellByColumn[columnIndex] = size
+        }
+      }
+
+      row.push(cell)
+    }
+
+    cellMatrix[rowIndex] = row
+    sizeMatrix[rowIndex] = sizes
+  }
+
+  // Figure out which alignments to use.
+  let columnIndex = -1
+
+  if (typeof align === 'object' && 'length' in align) {
+    while (++columnIndex < mostCellsPerRow) {
+      alignments[columnIndex] = toAlignment(align[columnIndex])
+    }
+  } else {
+    const code = toAlignment(align)
+
+    while (++columnIndex < mostCellsPerRow) {
+      alignments[columnIndex] = code
+    }
+  }
+
+  // Inject the alignment row.
+  columnIndex = -1
+  /** @type {Array<string>} */
+  const row = []
+  /** @type {Array<number>} */
+  const sizes = []
+
+  while (++columnIndex < mostCellsPerRow) {
+    const code = alignments[columnIndex]
+    let before = ''
+    let after = ''
+
+    if (code === 99 /* `c` */) {
+      before = ':'
+      after = ':'
+    } else if (code === 108 /* `l` */) {
+      before = ':'
+    } else if (code === 114 /* `r` */) {
+      after = ':'
+    }
+
+    // There *must* be at least one hyphen-minus in each alignment cell.
+    let size =
+      options.alignDelimiters === false
+        ? 1
+        : Math.max(
+            1,
+            longestCellByColumn[columnIndex] - before.length - after.length
+          )
+
+    const cell = before + '-'.repeat(size) + after
+
+    if (options.alignDelimiters !== false) {
+      size = before.length + size + after.length
+
+      if (size > longestCellByColumn[columnIndex]) {
+        longestCellByColumn[columnIndex] = size
+      }
+
+      sizes[columnIndex] = size
+    }
+
+    row[columnIndex] = cell
+  }
+
+  // Inject the alignment row.
+  cellMatrix.splice(1, 0, row)
+  sizeMatrix.splice(1, 0, sizes)
+
+  rowIndex = -1
+  /** @type {Array<string>} */
+  const lines = []
+
+  while (++rowIndex < cellMatrix.length) {
+    const row = cellMatrix[rowIndex]
+    const sizes = sizeMatrix[rowIndex]
+    columnIndex = -1
+    /** @type {Array<string>} */
+    const line = []
+
+    while (++columnIndex < mostCellsPerRow) {
+      const cell = row[columnIndex] || ''
+      let before = ''
+      let after = ''
+
+      if (options.alignDelimiters !== false) {
+        const size =
+          longestCellByColumn[columnIndex] - (sizes[columnIndex] || 0)
+        const code = alignments[columnIndex]
+
+        if (code === 114 /* `r` */) {
+          before = ' '.repeat(size)
+        } else if (code === 99 /* `c` */) {
+          if (size % 2) {
+            before = ' '.repeat(size / 2 + 0.5)
+            after = ' '.repeat(size / 2 - 0.5)
+          } else {
+            before = ' '.repeat(size / 2)
+            after = before
+          }
+        } else {
+          after = ' '.repeat(size)
+        }
+      }
+
+      if (options.delimiterStart !== false && !columnIndex) {
+        line.push('|')
+      }
+
+      if (
+        options.padding !== false &&
+        // Don’t add the opening space if we’re not aligning and the cell is
+        // empty: there will be a closing space.
+        !(options.alignDelimiters === false && cell === '') &&
+        (options.delimiterStart !== false || columnIndex)
+      ) {
+        line.push(' ')
+      }
+
+      if (options.alignDelimiters !== false) {
+        line.push(before)
+      }
+
+      line.push(cell)
+
+      if (options.alignDelimiters !== false) {
+        line.push(after)
+      }
+
+      if (options.padding !== false) {
+        line.push(' ')
+      }
+
+      if (
+        options.delimiterEnd !== false ||
+        columnIndex !== mostCellsPerRow - 1
+      ) {
+        line.push('|')
+      }
+    }
+
+    lines.push(
+      options.delimiterEnd === false
+        ? line.join('').replace(/ +$/, '')
+        : line.join('')
+    )
+  }
+
+  return lines.join('\n')
+}
+
+/**
+ * @param {string|null|undefined} [value]
+ * @returns {string}
+ */
+function serialize(value) {
+  return value === null || value === undefined ? '' : String(value)
+}
+
+/**
+ * @param {string} value
+ * @returns {number}
+ */
+function defaultStringLength(value) {
+  return value.length
+}
+
+/**
+ * @param {string|null|undefined} value
+ * @returns {number}
+ */
+function toAlignment(value) {
+  const code = typeof value === 'string' ? value.codePointAt(0) : 0
+
+  return code === 67 /* `C` */ || code === 99 /* `c` */
+    ? 99 /* `c` */
+    : code === 76 /* `L` */ || code === 108 /* `l` */
+    ? 108 /* `l` */
+    : code === 82 /* `R` */ || code === 114 /* `r` */
+    ? 114 /* `r` */
+    : 0
+}
+
+;// CONCATENATED MODULE: ./src/main.ts
 var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -14175,38 +14531,38 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 
+
 const GIST_HISTORY_FILE_NAME = 'history.json';
 const GIST_PACKAGE_VERSION = 0;
-const SizeCompareLiteral = runtypes__WEBPACK_IMPORTED_MODULE_1__.Literal(GIST_PACKAGE_VERSION);
-const FilesSizes = runtypes__WEBPACK_IMPORTED_MODULE_1__.Dictionary(runtypes__WEBPACK_IMPORTED_MODULE_1__.Number);
-const HistoryRecord = runtypes__WEBPACK_IMPORTED_MODULE_1__.Record({
-    unixtimestamp: runtypes__WEBPACK_IMPORTED_MODULE_1__.Number,
-    commitsha: runtypes__WEBPACK_IMPORTED_MODULE_1__.String,
+const SizeCompareLiteral = lib.Literal(GIST_PACKAGE_VERSION);
+const FilesSizes = lib.Dictionary(lib.Number, 'string');
+const HistoryRecord = lib.Record({
+    unixtimestamp: lib.Number,
+    commitsha: lib.String,
     files: FilesSizes,
 });
-const HistoryFile = runtypes__WEBPACK_IMPORTED_MODULE_1__.Record({
+const HistoryFile = lib.Record({
     'size-compare': SizeCompareLiteral,
-    history: runtypes__WEBPACK_IMPORTED_MODULE_1__.Array(HistoryRecord),
+    history: lib.Array(HistoryRecord),
 });
 function main() {
-    var _a, _b;
+    var _a, _b, _c;
     return __awaiter(this, void 0, void 0, function* () {
-        const gistId = (0,_actions_core__WEBPACK_IMPORTED_MODULE_2__.getInput)('gist-id', { required: true });
-        const token = (0,_actions_core__WEBPACK_IMPORTED_MODULE_2__.getInput)('token', { required: true });
-        const files = (0,_actions_core__WEBPACK_IMPORTED_MODULE_2__.getInput)('files', { required: true });
-        const { payload: { pull_request, repository, compare: compareLink, commits }, repo: { owner, repo }, sha, eventName, ref, } = _actions_github__WEBPACK_IMPORTED_MODULE_3__.context;
+        const gistId = (0,core.getInput)('gist-id', { required: true });
+        const token = (0,core.getInput)('token', { required: true });
+        const files = (0,core.getInput)('files', { required: true });
+        const { payload: { pull_request, repository, compare: compareLink, commits }, repo: { owner, repo }, sha, eventName, ref, } = github.context;
         const masterBranch = repository === null || repository === void 0 ? void 0 : repository.master_branch;
-        const globber = yield (0,_actions_glob__WEBPACK_IMPORTED_MODULE_4__.create)(files, { omitBrokenSymbolicLinks: true });
+        const globber = yield (0,glob.create)(files, { omitBrokenSymbolicLinks: true });
         const foundFilesList = yield globber.glob();
         const filesSizes = foundFilesList.map((path) => ({
             name: path.replace(process.cwd() + '/', ''),
             relative: path.replace(process.cwd(), '.'),
             full: path,
-            size: fs__WEBPACK_IMPORTED_MODULE_0__.statSync(path).size,
+            size: external_fs_.statSync(path).size,
         }));
-        const octokit = (0,_actions_github__WEBPACK_IMPORTED_MODULE_3__.getOctokit)(token);
+        const octokit = (0,github.getOctokit)(token);
         const gist = yield octokit.rest.gists.get({ gist_id: gistId });
-        console.log('GIST', gist.data.files);
         const gistFiles = {};
         // Read each file from gist to do not lose them on updating gist
         Object.keys(gist.data.files).forEach((key) => {
@@ -14220,7 +14576,7 @@ function main() {
                 };
             }
         });
-        const historyRecord = {
+        const currentHistoryRecord = {
             unixtimestamp: Date.now(),
             commitsha: sha,
             files: Object.fromEntries(filesSizes.map((file) => [file.name, file.size])),
@@ -14231,21 +14587,69 @@ function main() {
         });
         const originalFileContent = historyFile.content;
         const historyFileContent = HistoryFile.check(JSON.parse(originalFileContent));
-        // check for the latest commit in the history
         // Note: a history is written in reversed chronological order: the latest is the first
-        const alreadyCheckedSizeByHistory = (_b = (_a = historyFileContent.history[0]) === null || _a === void 0 ? void 0 : _a.commitsha) !== null && _b !== void 0 ? _b : '' === sha;
-        if (!alreadyCheckedSizeByHistory) {
-            historyFileContent.history.unshift(historyRecord);
-        }
-        const updatedHistoryContent = JSON.stringify(historyFileContent, null, 2);
-        historyFile.content = updatedHistoryContent;
-        // Do not commit GIST if no changes
-        if (updatedHistoryContent !== originalFileContent) {
-            console.log('History changed, updating GIST');
-            yield octokit.rest.gists.update({
-                gist_id: gistId,
-                files: gistFiles,
+        const latestRecord = historyFileContent.history[0];
+        if (pull_request) {
+            const masterFiles = (_a = latestRecord === null || latestRecord === void 0 ? void 0 : latestRecord.files) !== null && _a !== void 0 ? _a : {};
+            const prFiles = recordToList(currentHistoryRecord.files, 'path', 'size');
+            const changes = [];
+            prFiles.forEach(({ path, size }) => {
+                const masterFile = masterFiles[path];
+                if (typeof masterFile !== 'undefined') {
+                    const difference = size - masterFile;
+                    if (difference === 0) {
+                        changes.push({
+                            state: 'not changed',
+                            path,
+                            diff: '0',
+                        });
+                    }
+                    else {
+                        changes.push({
+                            state: 'modified',
+                            path,
+                            diff: String(difference),
+                        });
+                    }
+                    delete masterFiles[path];
+                }
+                else {
+                    changes.push({
+                        state: 'added',
+                        path,
+                        diff: String(size),
+                    });
+                }
             });
+            recordToList((_b = latestRecord === null || latestRecord === void 0 ? void 0 : latestRecord.files) !== null && _b !== void 0 ? _b : {}, 'path', 'size').forEach(({ path, size }) => {
+                changes.push({
+                    state: 'removed',
+                    path,
+                    diff: String(-size),
+                });
+            });
+            const md = markdownTable([
+                ['State', 'File', 'Diff'],
+                ...changes.map(({ state, path, diff }) => [state, path, diff]),
+            ]);
+            console.log(md);
+        }
+        if (!pull_request) {
+            // check for the latest commit in the history
+            const alreadyCheckedSizeByHistory = (_c = latestRecord === null || latestRecord === void 0 ? void 0 : latestRecord.commitsha) !== null && _c !== void 0 ? _c : '' === sha;
+            if (!alreadyCheckedSizeByHistory) {
+                historyFileContent.history.unshift(currentHistoryRecord);
+            }
+            const updatedHistoryContent = JSON.stringify(historyFileContent, null, 2);
+            historyFile.content = updatedHistoryContent;
+            // Do not commit GIST if no changes
+            if (updatedHistoryContent !== originalFileContent) {
+                console.log('History changed, updating GIST');
+                yield octokit.rest.gists.update({
+                    gist_id: gistId,
+                    files: gistFiles,
+                });
+            }
         }
         console.log('>>', JSON.stringify({
             files,
@@ -14261,15 +14665,15 @@ function main() {
             masterBranch,
         }, null, 2));
         const time = new Date().toTimeString();
-        (0,_actions_core__WEBPACK_IMPORTED_MODULE_2__.setOutput)('time', time);
+        (0,core.setOutput)('time', time);
     });
 }
 main().catch((error) => {
     if (error instanceof Error) {
-        (0,_actions_core__WEBPACK_IMPORTED_MODULE_2__.setFailed)(error.message);
+        (0,core.setFailed)(error.message);
     }
     else {
-        (0,_actions_core__WEBPACK_IMPORTED_MODULE_2__.setFailed)(String(error));
+        (0,core.setFailed)(String(error));
     }
 });
 function getOrCreate(record, key, defaultValue) {
@@ -14277,6 +14681,12 @@ function getOrCreate(record, key, defaultValue) {
         record[key] = defaultValue;
     }
     return record[key];
+}
+function recordToList(record, key, value) {
+    return Object.entries(record).map(([k, v]) => ({
+        [key]: k,
+        [value]: v,
+    }));
 }
 
 })();
