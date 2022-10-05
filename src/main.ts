@@ -17,6 +17,9 @@ async function main() {
 
   const octokit = getOctokit(token);
 
+  const gist = await octokit.rest.gists.get({gist_id: gistId});
+  console.log(gist);
+
   const {
     payload: {pull_request, repository},
     repo,

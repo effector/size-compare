@@ -10110,6 +10110,8 @@ function main() {
         const include = (0,core.getInput)('include');
         const exclude = (0,core.getInput)('exclude');
         const octokit = (0,github.getOctokit)(token);
+        const gist = yield octokit.rest.gists.get({ gist_id: gistId });
+        console.log(gist);
         const { payload: { pull_request, repository }, repo, sha, action, eventName, } = github.context;
         console.log('>>', JSON.stringify({
             pull_request,
