@@ -14189,7 +14189,7 @@ const HistoryFile = runtypes__WEBPACK_IMPORTED_MODULE_1__.Record({
     history: runtypes__WEBPACK_IMPORTED_MODULE_1__.Array(HistoryRecord),
 });
 function main() {
-    var _a, _b, _c;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
         const gistId = (0,_actions_core__WEBPACK_IMPORTED_MODULE_2__.getInput)('gist-id', { required: true });
         const token = (0,_actions_core__WEBPACK_IMPORTED_MODULE_2__.getInput)('token', { required: true });
@@ -14229,19 +14229,18 @@ function main() {
             filename: GIST_HISTORY_FILE_NAME,
             content: `{"size-compare": ${GIST_PACKAGE_VERSION}, "history": []}`,
         });
-        const historyFileContent = HistoryFile.check(JSON.parse(historyFile.content));
+        const originalFileContent = historyFile.content;
+        const historyFileContent = HistoryFile.check(JSON.parse(originalFileContent));
         // check for the latest commit in the history
         // Note: a history is written in reversed chronological order: the latest is the first
         const alreadyCheckedSizeByHistory = (_b = (_a = historyFileContent.history[0]) === null || _a === void 0 ? void 0 : _a.commitsha) !== null && _b !== void 0 ? _b : '' === sha;
-        console.log('ALREADY CHECKED SIZE BY HISTORY', alreadyCheckedSizeByHistory, (_c = historyFileContent.history[0]) === null || _c === void 0 ? void 0 : _c.commitsha, sha);
         if (!alreadyCheckedSizeByHistory) {
             historyFileContent.history.unshift(historyRecord);
         }
         const updatedHistoryContent = JSON.stringify(historyFileContent, null, 2);
-        gistFiles[GIST_HISTORY_FILE_NAME].content = updatedHistoryContent;
+        historyFile.content = updatedHistoryContent;
         // Do not commit GIST if no changes
-        console.log('HISTORY CHANGED', updatedHistoryContent, historyFile.content, updatedHistoryContent !== historyFile.content);
-        if (updatedHistoryContent !== historyFile.content) {
+        if (updatedHistoryContent !== originalFileContent) {
             console.log('History changed, updating GIST');
             yield octokit.rest.gists.update({
                 gist_id: gistId,
