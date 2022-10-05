@@ -40,8 +40,8 @@ async function main() {
   const masterBranch = repository?.master_branch;
 
   const globber = await createGlob(files, {omitBrokenSymbolicLinks: true});
-  const rawList = await globber.glob();
-  const list = rawList.map((path) => ({
+  const foundFilesList = await globber.glob();
+  const filesSizes = foundFilesList.map((path) => ({
     name: path.replace(process.cwd() + '/', ''),
     relative: path.replace(process.cwd(), '.'),
     full: path,
@@ -67,17 +67,30 @@ async function main() {
     }
   });
 
+  const historyRecord: HistoryRecord = {
+    unixtimestamp: Date.now(),
+    commitsha: sha,
+    files: Object.fromEntries(filesSizes.map((file) => [file.name, file.size])),
+  };
+
   const historyFile = getOrCreate(gistFiles, GIST_HISTORY_FILE_NAME, {
     filename: GIST_HISTORY_FILE_NAME,
     content: `{"size-compare": ${GIST_PACKAGE_VERSION}, "history": []}`,
   });
   const historyFileContent = HistoryFile.check(JSON.parse(historyFile.content));
 
-  // modifications of `historyFile` will be there
+  // check for the latest commit in the history
+  // Note: a history is written in reversed chronological order: the latest is the first
+  const alreadyCheckedSizeByHistory = historyFileContent.history[0]?.commitsha === sha;
+
+  if (!alreadyCheckedSizeByHistory) {
+    historyFileContent.history.unshift(historyRecord);
+  }
 
   const updatedHistoryContent = JSON.stringify(historyFileContent, null, 2);
   gistFiles[GIST_HISTORY_FILE_NAME].content = updatedHistoryContent;
 
+  // Do not commit GIST if no changes
   if (updatedHistoryContent !== historyFile.content) {
     console.log('History changed, updating GIST');
     await octokit.rest.gists.update({
@@ -91,7 +104,7 @@ async function main() {
     JSON.stringify(
       {
         files,
-        list,
+        list: filesSizes,
         pull_request,
         repository,
         owner,
