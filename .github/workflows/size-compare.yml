@@ -30,7 +30,7 @@ jobs:
         run: pnpm build
 
       - name: 🚛 Size compare
-        uses: effector/size-compare@master
+        uses: effector/size-compare@main
         with:
           token: ${{ secrets.SIZE_COMPARE_TOKEN }}
           bundle-directory: ./dist
