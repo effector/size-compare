@@ -14656,7 +14656,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 const GIST_HISTORY_FILE_NAME = 'history.json';
 const GIST_PACKAGE_VERSION = 0;
-const SIZE_COMPARE_HEADING = '## 🚛 size-compare report'; // add link https://github.com/effector/size-compare
+const SIZE_COMPARE_HEADING = '## 🚛 [size-compare](https://github.com/effector/size-compare) report';
 const SizeCompareLiteral = lib.Literal(GIST_PACKAGE_VERSION);
 const FilesSizes = lib.Dictionary(lib.Number, 'string');
 const HistoryRecord = lib.Record({
