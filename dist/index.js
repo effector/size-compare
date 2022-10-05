@@ -12191,15 +12191,14 @@ function main() {
     return __awaiter(this, void 0, void 0, function* () {
         const gistId = (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput)('gist-id', { required: true });
         const token = (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput)('token', { required: true });
-        const files = (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput)('files', { required: true })
-            .split('\n')
-            .map((pattern) => pattern.trim())
-            .filter(Boolean);
+        const files = (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput)('files', { required: true });
         const { payload: { pull_request, repository, compare: compareLink, commits }, repo: { owner, repo }, sha, eventName, ref, } = _actions_github__WEBPACK_IMPORTED_MODULE_1__.context;
         const masterBranch = repository === null || repository === void 0 ? void 0 : repository.master_branch;
-        const globber = yield (0,_actions_glob__WEBPACK_IMPORTED_MODULE_2__.create)('**', { omitBrokenSymbolicLinks: true });
+        const globber = yield (0,_actions_glob__WEBPACK_IMPORTED_MODULE_2__.create)(files, { omitBrokenSymbolicLinks: true });
+        const list = yield globber.glob();
         console.log('>>', JSON.stringify({
             files,
+            list,
             pull_request,
             repository,
             owner,

@@ -10,10 +10,7 @@ const GIST_HISTORY_FILE_NAME = 'history.json';
 async function main() {
   const gistId = getInput('gist-id', {required: true});
   const token = getInput('token', {required: true});
-  const files = getInput('files', {required: true})
-    .split('\n')
-    .map((pattern) => pattern.trim())
-    .filter(Boolean);
+  const files = getInput('files', {required: true});
 
   const {
     payload: {pull_request, repository, compare: compareLink, commits},
@@ -25,13 +22,15 @@ async function main() {
 
   const masterBranch = repository?.master_branch;
 
-  const globber = await createGlob('**', {omitBrokenSymbolicLinks: true});
+  const globber = await createGlob(files, {omitBrokenSymbolicLinks: true});
+  const list = await globber.glob();
 
   console.log(
     '>>',
     JSON.stringify(
       {
         files,
+        list,
         pull_request,
         repository,
         owner,
