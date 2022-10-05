@@ -31,3 +31,9 @@ jobs:
 
       - name: 🚛 Size compare
         uses: effector/size-compare@master
+        with:
+          token: ${{ secrets.SIZE_COMPARE_TOKEN }}
+          bundle-directory: ./dist
+          main-branch: main
+          include: '**/*.js'
+          exclude: '**/*.map'

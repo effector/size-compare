@@ -1,10 +1,23 @@
 name: 'Size Compare'
 description: 'Compare size of the built assets'
 inputs:
-  who-to-greet:  # id of input
-    description: 'Who to greet'
+  gist-id:
+    description: Id of the GIST to save size to
     required: true
-    default: 'World'
+  token:
+    description: A personal access token with "gist" and "repo" permissions. Should be stored as a Secret.
+    required: true
+  bundle-directory:
+    description: Files' directory compare size for
+    required: true
+  main-branch:
+    description: Name of the main branch to compare with
+    default: 'main'
+  include:
+    description: If passed use this value as a glob pattern to filter files from "bundle-directory"
+    required: false
+  exclude:
+    description: A glob pattern to filter out files filtered by "include" from "bundle-directory"
 outputs:
   time: # id of output
     description: 'The time we greeted you'

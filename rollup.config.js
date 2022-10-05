@@ -2,9 +2,8 @@ import babel from '@rollup/plugin-babel';
 import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
 
-import Package from './package.json';
-
 const extensions = ['.ts', '.tsx', '.json'];
+const external = ['@actions/core', '@actions/github'];
 
 export default {
   input: 'src',
@@ -13,7 +12,7 @@ export default {
     format: 'cjs',
     sourcemap: true,
   },
-  external: Object.keys(Package.dependencies),
+  external,
   plugins: [
     babel({extensions, exclude: 'node_modules/**', babelHelpers: 'bundled'}),
     resolve({extensions}),
