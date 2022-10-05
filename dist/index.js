@@ -14714,7 +14714,7 @@ function main() {
         // Note: a history is written in reversed chronological order: the latest is the first
         const latestRecord = historyFileContent.history[0];
         if (pull_request) {
-            const previousCommentPromise = fetchPreviousComment(gistOctokit, { owner, repo }, { number: pull_request.number });
+            const previousCommentPromise = fetchPreviousComment(baseOctokit, { owner, repo }, { number: pull_request.number });
             const masterFiles = Object.assign({}, ((_a = latestRecord === null || latestRecord === void 0 ? void 0 : latestRecord.files) !== null && _a !== void 0 ? _a : {}));
             const prFiles = recordToList(currentHistoryRecord.files, 'path', 'size');
             const changes = [];
@@ -14777,7 +14777,7 @@ function main() {
             const previousComment = yield previousCommentPromise;
             if (previousComment) {
                 try {
-                    yield gistOctokit.rest.issues.updateComment({
+                    yield baseOctokit.rest.issues.updateComment({
                         repo,
                         owner,
                         comment_id: previousComment.id,
@@ -14790,7 +14790,7 @@ function main() {
             }
             else {
                 try {
-                    yield gistOctokit.rest.issues.createComment({
+                    yield baseOctokit.rest.issues.createComment({
                         repo,
                         owner,
                         issue_number: pull_request.number,

@@ -88,7 +88,7 @@ async function main() {
 
   if (pull_request) {
     const previousCommentPromise = fetchPreviousComment(
-      gistOctokit,
+      baseOctokit,
       {owner, repo},
       {number: pull_request.number},
     );
@@ -159,7 +159,7 @@ async function main() {
 
     if (previousComment) {
       try {
-        await gistOctokit.rest.issues.updateComment({
+        await baseOctokit.rest.issues.updateComment({
           repo,
           owner,
           comment_id: previousComment.id,
@@ -173,7 +173,7 @@ async function main() {
       }
     } else {
       try {
-        await gistOctokit.rest.issues.createComment({
+        await baseOctokit.rest.issues.createComment({
           repo,
           owner,
           issue_number: pull_request.number,
