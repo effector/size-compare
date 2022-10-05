@@ -14912,10 +14912,10 @@ function main() {
                     };
                     const hasChanges = raw.diff !== 0;
                     if (hasChanges) {
-                        // changes.push({state: 'not changed', path, raw, gzip});
+                        changes.push({ state: 'modified', path, raw, gzip });
                     }
                     else {
-                        changes.push({ state: 'modified', path, raw, gzip });
+                        changes.push({ state: 'not changed', path, raw, gzip });
                     }
                     delete masterFiles[path];
                 }
