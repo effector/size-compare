@@ -182,12 +182,12 @@ async function main() {
         ...changes.map(({path, raw, gzip}) => {
           return [
             path,
-            raw.diff ? signedFixedPercent(raw.diff) : '',
-            raw.before ? prettyBytes(raw.before) : '',
-            raw.now ? prettyBytes(raw.now) : '',
-            gzip.diff ? signedFixedPercent(gzip.diff) : '',
-            gzip.before ? prettyBytes(gzip.before) : '',
-            gzip.now ? prettyBytes(gzip.now) : '',
+            applyExists(raw.diff, signedFixedPercent),
+            applyExists(raw.before, prettyBytes),
+            applyExists(raw.now, prettyBytes),
+            applyExists(gzip.diff, signedFixedPercent),
+            applyExists(gzip.before, prettyBytes),
+            applyExists(gzip.now, prettyBytes),
           ];
         }),
       ]),
@@ -201,6 +201,10 @@ async function main() {
         return '=';
       }
       return `${value > 0 ? '+' : ''}${value.toFixed(2)}`;
+    }
+    function applyExists(value: number | null, fn: (value: number) => string) {
+      if (value === null) return '';
+      return fn(value);
     }
 
     const previousComment = await previousCommentPromise;
