@@ -15,10 +15,11 @@ async function main() {
   const exclude = getInput('exclude');
 
   const {
-    payload: {pull_request, repository},
+    payload: {pull_request, repository, compare: compareLink, commits},
     repo: {owner, repo},
     sha,
     eventName,
+    ref,
   } = context;
 
   const masterBranch = repository?.master_branch;
@@ -31,7 +32,9 @@ async function main() {
         repository,
         owner,
         repo,
+        ref,
         sha,
+        compareLink,
         eventName,
         masterBranch,
       },
