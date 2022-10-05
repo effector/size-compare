@@ -10108,14 +10108,14 @@ function main() {
         const bundleDirectory = external_path_.resolve(process.cwd(), (0,core.getInput)('bundle-directory', { required: true }));
         const include = (0,core.getInput)('include');
         const exclude = (0,core.getInput)('exclude');
-        const { payload: { pull_request, repository }, repo, sha, action, eventName, } = github.context;
+        const { payload: { pull_request, repository }, repo: { owner, repo }, sha, eventName, } = github.context;
         const masterBranch = repository === null || repository === void 0 ? void 0 : repository.master_branch;
         console.log('>>', JSON.stringify({
             pull_request,
             repository,
+            owner,
             repo,
             sha,
-            action,
             eventName,
             masterBranch,
         }, null, 2));

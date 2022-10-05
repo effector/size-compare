@@ -16,9 +16,8 @@ async function main() {
 
   const {
     payload: {pull_request, repository},
-    repo,
+    repo: {owner, repo},
     sha,
-    action,
     eventName,
   } = context;
 
@@ -30,9 +29,9 @@ async function main() {
       {
         pull_request,
         repository,
+        owner,
         repo,
         sha,
-        action,
         eventName,
         masterBranch,
       },
