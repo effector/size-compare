@@ -14534,6 +14534,7 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 const GIST_HISTORY_FILE_NAME = 'history.json';
 const GIST_PACKAGE_VERSION = 0;
+const SIZE_COMPARE_HEADING = '## 🚛 size-compare report';
 const SizeCompareLiteral = lib.Literal(GIST_PACKAGE_VERSION);
 const FilesSizes = lib.Dictionary(lib.Number, 'string');
 const HistoryRecord = lib.Record({
@@ -14590,6 +14591,7 @@ function main() {
         // Note: a history is written in reversed chronological order: the latest is the first
         const latestRecord = historyFileContent.history[0];
         if (pull_request) {
+            const previousCommentPromise = fetchPreviousComment(octokit, { owner, repo }, { number: pull_request.number });
             const masterFiles = (_a = latestRecord === null || latestRecord === void 0 ? void 0 : latestRecord.files) !== null && _a !== void 0 ? _a : {};
             const prFiles = recordToList(currentHistoryRecord.files, 'path', 'size');
             const changes = [];
@@ -14628,11 +14630,40 @@ function main() {
                     diff: String(-size),
                 });
             });
-            const md = markdownTable([
-                ['State', 'File', 'Diff'],
-                ...changes.map(({ state, path, diff }) => [state, path, diff]),
-            ]);
-            console.log(md);
+            const commentBody = [
+                SIZE_COMPARE_HEADING,
+                markdownTable([
+                    ['State', 'File', 'Diff'],
+                    ...changes.map(({ state, path, diff }) => [state, path, diff]),
+                ]),
+            ].join('\r\n');
+            const previousComment = yield previousCommentPromise;
+            if (previousComment) {
+                try {
+                    yield octokit.rest.issues.updateComment({
+                        repo,
+                        owner,
+                        comment_id: previousComment.id,
+                        body: commentBody,
+                    });
+                }
+                catch (error) {
+                    console.log("Error updating comment. This can happen for PR's originating from a fork without write permissions.", error);
+                }
+            }
+            else {
+                try {
+                    yield octokit.rest.issues.createComment({
+                        repo,
+                        owner,
+                        issue_number: pull_request.number,
+                        body: commentBody,
+                    });
+                }
+                catch (error) {
+                    console.log("Error creating comment. This can happen for PR's originating from a fork without write permissions.", error);
+                }
+            }
         }
         if (!pull_request) {
             // check for the latest commit in the history
@@ -14664,6 +14695,17 @@ function main() {
             eventName,
             masterBranch,
         }, null, 2));
+    });
+}
+function fetchPreviousComment(octokit, repo, pr) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const comments = yield octokit.rest.issues.listComments({
+            owner: repo.owner,
+            repo: repo.repo,
+            issue_number: pr.number,
+        });
+        const sizeCompareComment = comments.data.find((comment) => { var _a; return (_a = comment.body) === null || _a === void 0 ? void 0 : _a.startsWith(SIZE_COMPARE_HEADING); });
+        return sizeCompareComment !== null && sizeCompareComment !== void 0 ? sizeCompareComment : null;
     });
 }
 function getOrCreate(record, key, defaultValue) {

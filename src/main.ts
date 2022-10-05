@@ -8,6 +8,8 @@ import {markdownTable} from 'markdown-table';
 const GIST_HISTORY_FILE_NAME = 'history.json';
 const GIST_PACKAGE_VERSION = 0;
 
+const SIZE_COMPARE_HEADING = '## 🚛 size-compare report';
+
 const SizeCompareLiteral = t.Literal(GIST_PACKAGE_VERSION);
 
 const FilesSizes = t.Dictionary(t.Number, 'string');
@@ -83,6 +85,11 @@ async function main() {
   const latestRecord = historyFileContent.history[0];
 
   if (pull_request) {
+    const previousCommentPromise = fetchPreviousComment(
+      octokit,
+      {owner, repo},
+      {number: pull_request.number},
+    );
     const masterFiles = latestRecord?.files ?? {};
     const prFiles = recordToList(currentHistoryRecord.files, 'path', 'size');
 
@@ -125,12 +132,45 @@ async function main() {
       });
     });
 
-    const md = markdownTable([
-      ['State', 'File', 'Diff'],
-      ...changes.map(({state, path, diff}) => [state, path, diff]),
-    ]);
+    const commentBody = [
+      SIZE_COMPARE_HEADING,
+      markdownTable([
+        ['State', 'File', 'Diff'],
+        ...changes.map(({state, path, diff}) => [state, path, diff]),
+      ]),
+    ].join('\r\n');
 
-    console.log(md);
+    const previousComment = await previousCommentPromise;
+
+    if (previousComment) {
+      try {
+        await octokit.rest.issues.updateComment({
+          repo,
+          owner,
+          comment_id: previousComment.id,
+          body: commentBody,
+        });
+      } catch (error) {
+        console.log(
+          "Error updating comment. This can happen for PR's originating from a fork without write permissions.",
+          error,
+        );
+      }
+    } else {
+      try {
+        await octokit.rest.issues.createComment({
+          repo,
+          owner,
+          issue_number: pull_request.number,
+          body: commentBody,
+        });
+      } catch (error) {
+        console.log(
+          "Error creating comment. This can happen for PR's originating from a fork without write permissions.",
+          error,
+        );
+      }
+    }
   }
 
   if (!pull_request) {
@@ -174,6 +214,24 @@ async function main() {
       2,
     ),
   );
+}
+
+async function fetchPreviousComment(
+  octokit: ReturnType<typeof getOctokit>,
+  repo: {owner: string; repo: string},
+  pr: {number: number},
+) {
+  const comments = await octokit.rest.issues.listComments({
+    owner: repo.owner,
+    repo: repo.repo,
+    issue_number: pr.number,
+  });
+
+  const sizeCompareComment = comments.data.find((comment) =>
+    comment.body?.startsWith(SIZE_COMPARE_HEADING),
+  );
+
+  return sizeCompareComment ?? null;
 }
 
 function getOrCreate<T>(record: Record<string, T>, key: string, defaultValue: T): T {
