@@ -91,7 +91,7 @@ async function main() {
       {owner, repo},
       {number: pull_request.number},
     );
-    const masterFiles = latestRecord?.files ?? {};
+    const masterFiles = {...(latestRecord?.files ?? {})};
     const prFiles = recordToList(currentHistoryRecord.files, 'path', 'size');
 
     type ChangeState = 'modified' | 'added' | 'removed' | 'not changed';
@@ -142,7 +142,7 @@ async function main() {
       markdownTable([
         ['File', 'State', 'Diff', 'Current size', 'Original size'],
         ...changes.map(({state, path, diff, size}) => {
-          const originalSize = latestRecord?.files?.[path] ?? 0;
+          const originalSize = latestRecord?.files[path] ?? 0;
           return [
             path,
             state,

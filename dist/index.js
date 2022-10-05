@@ -14714,7 +14714,7 @@ function main() {
         const latestRecord = historyFileContent.history[0];
         if (pull_request) {
             const previousCommentPromise = fetchPreviousComment(octokit, { owner, repo }, { number: pull_request.number });
-            const masterFiles = (_a = latestRecord === null || latestRecord === void 0 ? void 0 : latestRecord.files) !== null && _a !== void 0 ? _a : {};
+            const masterFiles = Object.assign({}, ((_a = latestRecord === null || latestRecord === void 0 ? void 0 : latestRecord.files) !== null && _a !== void 0 ? _a : {}));
             const prFiles = recordToList(currentHistoryRecord.files, 'path', 'size');
             const changes = [];
             prFiles.forEach(({ path, size }) => {
@@ -14761,8 +14761,8 @@ function main() {
                 markdownTable([
                     ['File', 'State', 'Diff', 'Current size', 'Original size'],
                     ...changes.map(({ state, path, diff, size }) => {
-                        var _a, _b;
-                        const originalSize = (_b = (_a = latestRecord === null || latestRecord === void 0 ? void 0 : latestRecord.files) === null || _a === void 0 ? void 0 : _a[path]) !== null && _b !== void 0 ? _b : 0;
+                        var _a;
+                        const originalSize = (_a = latestRecord === null || latestRecord === void 0 ? void 0 : latestRecord.files[path]) !== null && _a !== void 0 ? _a : 0;
                         return [
                             path,
                             state,
