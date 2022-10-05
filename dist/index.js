@@ -14664,18 +14664,8 @@ function main() {
             eventName,
             masterBranch,
         }, null, 2));
-        const time = new Date().toTimeString();
-        (0,core.setOutput)('time', time);
     });
 }
-main().catch((error) => {
-    if (error instanceof Error) {
-        (0,core.setFailed)(error.message);
-    }
-    else {
-        (0,core.setFailed)(String(error));
-    }
-});
 function getOrCreate(record, key, defaultValue) {
     if (!record[key]) {
         record[key] = defaultValue;
@@ -14688,6 +14678,14 @@ function recordToList(record, key, value) {
         [value]: v,
     }));
 }
+main().catch((error) => {
+    if (error instanceof Error) {
+        (0,core.setFailed)(error.message);
+    }
+    else {
+        (0,core.setFailed)(String(error));
+    }
+});
 
 })();
 

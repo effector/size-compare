@@ -174,27 +174,7 @@ async function main() {
       2,
     ),
   );
-
-  const time = new Date().toTimeString();
-  setOutput('time', time);
-  // Get the JSON webhook payload for the event that triggered the workflow
-  // const payload = JSON.stringify(context.payload, undefined, 2);
-  // console.log(`The event payload: ${payload}`);
-  // console.log(
-  //   markdownTable([
-  //     ['Branch', 'Commit'],
-  //     ['main', 'asdasda'],
-  //   ]),
-  // );
 }
-
-main().catch((error) => {
-  if (error instanceof Error) {
-    setFailed(error.message);
-  } else {
-    setFailed(String(error));
-  }
-});
 
 function getOrCreate<T>(record: Record<string, T>, key: string, defaultValue: T): T {
   if (!record[key]) {
@@ -215,3 +195,11 @@ function recordToList<T, K extends string, V extends string>(
     [value]: v,
   })) as Array<RecordedItem<K, V, T>>;
 }
+
+main().catch((error) => {
+  if (error instanceof Error) {
+    setFailed(error.message);
+  } else {
+    setFailed(String(error));
+  }
+});
