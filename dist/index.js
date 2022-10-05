@@ -15003,40 +15003,6 @@ function main() {
                 }
             }
         }
-        if (!pull_request) {
-            const recordForThisCommitIndex = historyFileContent.history.findIndex((record) => record.commitsha === sha);
-            const alreadyCheckedSizeByHistory = recordForThisCommitIndex !== -1;
-            if (alreadyCheckedSizeByHistory) {
-                historyFileContent.history[recordForThisCommitIndex] = currentHistoryRecord;
-            }
-            else {
-                historyFileContent.history.unshift(currentHistoryRecord);
-            }
-            const updatedHistoryContent = JSON.stringify(historyFileContent, null, 2);
-            historyFile.content = updatedHistoryContent;
-            // Do not commit GIST if no changes
-            if (updatedHistoryContent !== originalFileContent) {
-                console.log('History changed, updating GIST');
-                yield gistOctokit.rest.gists.update({
-                    gist_id: gistId,
-                    files: gistFiles,
-                });
-            }
-        }
-        console.log('>>', JSON.stringify({
-            commits,
-            files,
-            list: filesSizes,
-            pull_request,
-            repository,
-            owner,
-            repo,
-            ref,
-            sha,
-            compareLink,
-            eventName,
-            masterBranch,
-        }, null, 2));
     });
 }
 function fetchPreviousComment(octokit, repo, pr) {
