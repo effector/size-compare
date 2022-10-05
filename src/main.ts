@@ -3,6 +3,7 @@ import * as t from 'runtypes';
 import {getInput, setFailed} from '@actions/core';
 import {context, getOctokit} from '@actions/github';
 import {create as createGlob} from '@actions/glob';
+import {gzipSizeFromFile} from 'gzip-size';
 import {markdownTable} from 'markdown-table';
 import prettyBytes from 'pretty-bytes';
 
@@ -14,7 +15,13 @@ const SIZE_COMPARE_HEADING =
 
 const SizeCompareLiteral = t.Literal(GIST_PACKAGE_VERSION);
 
-const FilesSizes = t.Dictionary(t.Number, 'string');
+const FilesSizes = t.Dictionary(
+  t.Record({
+    raw: t.Number,
+    gzip: t.Number,
+  }),
+  'string',
+);
 
 const HistoryRecord = t.Record({
   unixtimestamp: t.Number,
@@ -47,12 +54,15 @@ async function main() {
 
   const globber = await createGlob(files, {omitBrokenSymbolicLinks: true});
   const foundFilesList = await globber.glob();
-  const filesSizes = foundFilesList.map((path) => ({
-    name: path.replace(process.cwd() + '/', ''),
-    relative: path.replace(process.cwd(), '.'),
-    full: path,
-    size: fs.statSync(path).size,
-  }));
+  const filesSizes = await Promise.all(
+    foundFilesList.map(async (path) => ({
+      name: path.replace(process.cwd() + '/', ''),
+      relative: path.replace(process.cwd(), '.'),
+      full: path,
+      size: fs.statSync(path).size,
+      gzip: await gzipSizeFromFile(path),
+    })),
+  );
 
   const gistOctokit = getOctokit(gistToken);
   const baseOctokit = getOctokit(githubToken);
@@ -75,7 +85,9 @@ async function main() {
   const currentHistoryRecord: HistoryRecord = {
     unixtimestamp: Date.now(),
     commitsha: sha,
-    files: Object.fromEntries(filesSizes.map((file) => [file.name, file.size])),
+    files: Object.fromEntries(
+      filesSizes.map((file) => [file.name, {raw: file.size, gzip: file.gzip}]),
+    ),
   };
 
   const historyFile = getOrCreate(gistFiles, GIST_HISTORY_FILE_NAME, {
@@ -98,64 +110,98 @@ async function main() {
     const prFiles = recordToList(currentHistoryRecord.files, 'path', 'size');
 
     type ChangeState = 'modified' | 'added' | 'removed' | 'not changed';
+    interface Change {
+      state: ChangeState;
+      path: string;
+      raw: {
+        before: number | null;
+        now: number | null;
+        diff: number | null;
+      };
+      gzip: {
+        before: number | null;
+        now: number | null;
+        diff: number | null;
+      };
+    }
 
-    const changes: {state: ChangeState; path: string; diff: string; size: number}[] = [];
+    const changes: Change[] = [];
 
-    prFiles.forEach(({path, size}) => {
+    prFiles.forEach(({path, size: current}) => {
       const masterFile = masterFiles[path];
       if (typeof masterFile !== 'undefined') {
-        const difference = size - masterFile;
-        if (difference === 0) {
-          changes.push({
-            state: 'not changed',
-            path,
-            diff: '',
-            size,
-          });
+        const raw = {
+          before: masterFile.raw,
+          now: current.raw,
+          diff: difference(masterFile.raw, current.raw),
+        };
+        const gzip = {
+          before: masterFile.gzip,
+          now: current.gzip,
+          diff: difference(masterFile.raw, current.gzip),
+        };
+        const hasChanges = raw.diff !== 0;
+
+        if (hasChanges) {
+          // changes.push({state: 'not changed', path, raw, gzip});
         } else {
-          changes.push({
-            state: 'modified',
-            path,
-            diff: prettyBytes(difference, {signed: true}),
-            size,
-          });
+          changes.push({state: 'modified', path, raw, gzip});
         }
         delete masterFiles[path];
       } else {
         changes.push({
           state: 'added',
           path,
-          diff: prettyBytes(size, {signed: true}),
-          size,
+          raw: {before: null, now: current.raw, diff: null},
+          gzip: {before: null, now: current.gzip, diff: null},
         });
       }
     });
 
-    recordToList(masterFiles, 'path', 'size').forEach(({path, size}) => {
+    recordToList(masterFiles, 'path', 'size').forEach(({path, size: masterFile}) => {
       changes.push({
         state: 'removed',
         path,
-        diff: prettyBytes(-size, {signed: true}),
-        size,
+        raw: {
+          before: masterFile.raw,
+          now: null,
+          diff: null,
+        },
+        gzip: {
+          before: masterFile.gzip,
+          now: null,
+          diff: null,
+        },
       });
     });
 
     const commentBody = [
       SIZE_COMPARE_HEADING,
       markdownTable([
-        ['File', 'State', 'Diff', 'Current size', 'Original size'],
-        ...changes.map(({state, path, diff, size}) => {
-          const originalSize = latestRecord?.files[path] ?? 0;
+        ['File', '+/-', 'Base', 'Current', '+/- gzip', 'Base gzip', 'Current gzip'],
+        ...changes.map(({path, raw, gzip}) => {
           return [
             path,
-            state,
-            diff,
-            prettyBytes(size),
-            originalSize ? prettyBytes(originalSize) : '',
+            raw.diff ? signedFixedPercent(raw.diff) : '',
+            raw.before ? prettyBytes(raw.before) : '',
+            raw.now ? prettyBytes(raw.now) : '',
+            gzip.diff ? signedFixedPercent(gzip.diff) : '',
+            gzip.before ? prettyBytes(gzip.before) : '',
+            gzip.now ? prettyBytes(gzip.now) : '',
           ];
         }),
       ]),
     ].join('\r\n');
+
+    function difference(a: number, b: number): number {
+      return (Math.abs(a - b) / a) * Math.sign(b - a) * 100;
+    }
+    function signedFixedPercent(value: number): string {
+      if (value === 0) {
+        return '=';
+      }
+      return `${value > 0 ? '+' : ''}${value.toFixed(2)}`;
+    }
 
     const previousComment = await previousCommentPromise;
 

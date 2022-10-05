@@ -6039,6 +6039,100 @@ exports.Deprecation = Deprecation;
 
 /***/ }),
 
+/***/ 3429:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+var Stream = __nccwpck_require__(2781)
+var writeMethods = ["write", "end", "destroy"]
+var readMethods = ["resume", "pause"]
+var readEvents = ["data", "close"]
+var slice = Array.prototype.slice
+
+module.exports = duplex
+
+function forEach (arr, fn) {
+    if (arr.forEach) {
+        return arr.forEach(fn)
+    }
+
+    for (var i = 0; i < arr.length; i++) {
+        fn(arr[i], i)
+    }
+}
+
+function duplex(writer, reader) {
+    var stream = new Stream()
+    var ended = false
+
+    forEach(writeMethods, proxyWriter)
+
+    forEach(readMethods, proxyReader)
+
+    forEach(readEvents, proxyStream)
+
+    reader.on("end", handleEnd)
+
+    writer.on("drain", function() {
+      stream.emit("drain")
+    })
+
+    writer.on("error", reemit)
+    reader.on("error", reemit)
+
+    stream.writable = writer.writable
+    stream.readable = reader.readable
+
+    return stream
+
+    function proxyWriter(methodName) {
+        stream[methodName] = method
+
+        function method() {
+            return writer[methodName].apply(writer, arguments)
+        }
+    }
+
+    function proxyReader(methodName) {
+        stream[methodName] = method
+
+        function method() {
+            stream.emit(methodName)
+            var func = reader[methodName]
+            if (func) {
+                return func.apply(reader, arguments)
+            }
+            reader.emit(methodName)
+        }
+    }
+
+    function proxyStream(methodName) {
+        reader.on(methodName, reemit)
+
+        function reemit() {
+            var args = slice.call(arguments)
+            args.unshift(methodName)
+            stream.emit.apply(stream, args)
+        }
+    }
+
+    function handleEnd() {
+        if (ended) {
+            return
+        }
+        ended = true
+        var args = slice.call(arguments)
+        args.unshift("end")
+        stream.emit.apply(stream, args)
+    }
+
+    function reemit(err) {
+        stream.emit("error", err)
+    }
+}
+
+
+/***/ }),
+
 /***/ 4014:
 /***/ ((__unused_webpack_module, exports) => {
 
@@ -14134,6 +14228,83 @@ var core = __nccwpck_require__(7954);
 var github = __nccwpck_require__(9939);
 // EXTERNAL MODULE: ./node_modules/.pnpm/@actions+glob@0.3.0/node_modules/@actions/glob/lib/glob.js
 var glob = __nccwpck_require__(1770);
+;// CONCATENATED MODULE: external "node:fs"
+const external_node_fs_namespaceObject = require("node:fs");
+;// CONCATENATED MODULE: external "node:stream"
+const external_node_stream_namespaceObject = require("node:stream");
+;// CONCATENATED MODULE: external "node:zlib"
+const external_node_zlib_namespaceObject = require("node:zlib");
+;// CONCATENATED MODULE: external "node:util"
+const external_node_util_namespaceObject = require("node:util");
+// EXTERNAL MODULE: ./node_modules/.pnpm/duplexer@0.1.2/node_modules/duplexer/index.js
+var duplexer = __nccwpck_require__(3429);
+;// CONCATENATED MODULE: ./node_modules/.pnpm/gzip-size@7.0.0/node_modules/gzip-size/index.js
+
+
+
+
+
+
+const getOptions = options => ({level: 9, ...options});
+const gzip = (0,external_node_util_namespaceObject.promisify)(external_node_zlib_namespaceObject.gzip);
+
+async function gzipSize(input, options) {
+	if (!input) {
+		return 0;
+	}
+
+	const data = await gzip(input, getOptions(options));
+	return data.length;
+}
+
+function gzipSizeSync(input, options) {
+	return zlib.gzipSync(input, getOptions(options)).length;
+}
+
+function gzipSizeFromFile(path, options) {
+	// TODO: Use `stream.pipeline` here.
+
+	return new Promise((resolve, reject) => {
+		const stream = external_node_fs_namespaceObject.createReadStream(path);
+		stream.on('error', reject);
+
+		const gzipStream = stream.pipe(gzipSizeStream(options));
+		gzipStream.on('error', reject);
+		gzipStream.on('gzip-size', resolve);
+	});
+}
+
+function gzipSizeFromFileSync(path, options) {
+	return gzipSizeSync(fs.readFileSync(path), options);
+}
+
+function gzipSizeStream(options) {
+	// TODO: Use `stream.pipeline` here.
+
+	const input = new external_node_stream_namespaceObject.PassThrough();
+	const output = new external_node_stream_namespaceObject.PassThrough();
+	const wrapper = duplexer(input, output);
+
+	let gzipSize = 0;
+	const gzip = external_node_zlib_namespaceObject.createGzip(getOptions(options))
+		.on('data', buf => {
+			gzipSize += buf.length;
+		})
+		.on('error', () => {
+			wrapper.gzipSize = 0;
+		})
+		.on('end', () => {
+			wrapper.gzipSize = gzipSize;
+			wrapper.emit('gzip-size', gzipSize);
+			output.end();
+		});
+
+	input.pipe(gzip);
+	input.pipe(output, {end: false});
+
+	return wrapper;
+}
+
 ;// CONCATENATED MODULE: ./node_modules/.pnpm/markdown-table@3.0.2/node_modules/markdown-table/index.js
 /**
  * @typedef Options
@@ -14654,11 +14825,15 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 
 
+
 const GIST_HISTORY_FILE_NAME = 'history.json';
 const GIST_PACKAGE_VERSION = 0;
 const SIZE_COMPARE_HEADING = '## 🚛 [size-compare](https://github.com/effector/size-compare) report';
 const SizeCompareLiteral = lib.Literal(GIST_PACKAGE_VERSION);
-const FilesSizes = lib.Dictionary(lib.Number, 'string');
+const FilesSizes = lib.Dictionary(lib.Record({
+    raw: lib.Number,
+    gzip: lib.Number,
+}), 'string');
 const HistoryRecord = lib.Record({
     unixtimestamp: lib.Number,
     commitsha: lib.String,
@@ -14679,12 +14854,15 @@ function main() {
         const masterBranch = repository === null || repository === void 0 ? void 0 : repository.master_branch;
         const globber = yield (0,glob.create)(files, { omitBrokenSymbolicLinks: true });
         const foundFilesList = yield globber.glob();
-        const filesSizes = foundFilesList.map((path) => ({
-            name: path.replace(process.cwd() + '/', ''),
-            relative: path.replace(process.cwd(), '.'),
-            full: path,
-            size: external_fs_.statSync(path).size,
-        }));
+        const filesSizes = yield Promise.all(foundFilesList.map((path) => __awaiter(this, void 0, void 0, function* () {
+            return ({
+                name: path.replace(process.cwd() + '/', ''),
+                relative: path.replace(process.cwd(), '.'),
+                full: path,
+                size: external_fs_.statSync(path).size,
+                gzip: yield gzipSizeFromFile(path),
+            });
+        })));
         const gistOctokit = (0,github.getOctokit)(gistToken);
         const baseOctokit = (0,github.getOctokit)(githubToken);
         const gist = yield gistOctokit.rest.gists.get({ gist_id: gistId });
@@ -14704,7 +14882,7 @@ function main() {
         const currentHistoryRecord = {
             unixtimestamp: Date.now(),
             commitsha: sha,
-            files: Object.fromEntries(filesSizes.map((file) => [file.name, file.size])),
+            files: Object.fromEntries(filesSizes.map((file) => [file.name, { raw: file.size, gzip: file.gzip }])),
         };
         const historyFile = getOrCreate(gistFiles, GIST_HISTORY_FILE_NAME, {
             filename: GIST_HISTORY_FILE_NAME,
@@ -14719,25 +14897,25 @@ function main() {
             const masterFiles = Object.assign({}, ((_a = latestRecord === null || latestRecord === void 0 ? void 0 : latestRecord.files) !== null && _a !== void 0 ? _a : {}));
             const prFiles = recordToList(currentHistoryRecord.files, 'path', 'size');
             const changes = [];
-            prFiles.forEach(({ path, size }) => {
+            prFiles.forEach(({ path, size: current }) => {
                 const masterFile = masterFiles[path];
                 if (typeof masterFile !== 'undefined') {
-                    const difference = size - masterFile;
-                    if (difference === 0) {
-                        changes.push({
-                            state: 'not changed',
-                            path,
-                            diff: '',
-                            size,
-                        });
+                    const raw = {
+                        before: masterFile.raw,
+                        now: current.raw,
+                        diff: difference(masterFile.raw, current.raw),
+                    };
+                    const gzip = {
+                        before: masterFile.gzip,
+                        now: current.gzip,
+                        diff: difference(masterFile.raw, current.gzip),
+                    };
+                    const hasChanges = raw.diff !== 0;
+                    if (hasChanges) {
+                        // changes.push({state: 'not changed', path, raw, gzip});
                     }
                     else {
-                        changes.push({
-                            state: 'modified',
-                            path,
-                            diff: prettyBytes(difference, { signed: true }),
-                            size,
-                        });
+                        changes.push({ state: 'modified', path, raw, gzip });
                     }
                     delete masterFiles[path];
                 }
@@ -14745,36 +14923,53 @@ function main() {
                     changes.push({
                         state: 'added',
                         path,
-                        diff: prettyBytes(size, { signed: true }),
-                        size,
+                        raw: { before: null, now: current.raw, diff: null },
+                        gzip: { before: null, now: current.gzip, diff: null },
                     });
                 }
             });
-            recordToList(masterFiles, 'path', 'size').forEach(({ path, size }) => {
+            recordToList(masterFiles, 'path', 'size').forEach(({ path, size: masterFile }) => {
                 changes.push({
                     state: 'removed',
                     path,
-                    diff: prettyBytes(-size, { signed: true }),
-                    size,
+                    raw: {
+                        before: masterFile.raw,
+                        now: null,
+                        diff: null,
+                    },
+                    gzip: {
+                        before: masterFile.gzip,
+                        now: null,
+                        diff: null,
+                    },
                 });
             });
             const commentBody = [
                 SIZE_COMPARE_HEADING,
                 markdownTable([
-                    ['File', 'State', 'Diff', 'Current size', 'Original size'],
-                    ...changes.map(({ state, path, diff, size }) => {
-                        var _a;
-                        const originalSize = (_a = latestRecord === null || latestRecord === void 0 ? void 0 : latestRecord.files[path]) !== null && _a !== void 0 ? _a : 0;
+                    ['File', '+/-', 'Base', 'Current', '+/- gzip', 'Base gzip', 'Current gzip'],
+                    ...changes.map(({ path, raw, gzip }) => {
                         return [
                             path,
-                            state,
-                            diff,
-                            prettyBytes(size),
-                            originalSize ? prettyBytes(originalSize) : '',
+                            raw.diff ? signedFixedPercent(raw.diff) : '',
+                            raw.before ? prettyBytes(raw.before) : '',
+                            raw.now ? prettyBytes(raw.now) : '',
+                            gzip.diff ? signedFixedPercent(gzip.diff) : '',
+                            gzip.before ? prettyBytes(gzip.before) : '',
+                            gzip.now ? prettyBytes(gzip.now) : '',
                         ];
                     }),
                 ]),
             ].join('\r\n');
+            function difference(a, b) {
+                return (Math.abs(a - b) / a) * Math.sign(b - a) * 100;
+            }
+            function signedFixedPercent(value) {
+                if (value === 0) {
+                    return '=';
+                }
+                return `${value > 0 ? '+' : ''}${value.toFixed(2)}`;
+            }
             const previousComment = yield previousCommentPromise;
             if (previousComment) {
                 try {
