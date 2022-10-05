@@ -138,7 +138,7 @@ async function main() {
         const gzip = {
           before: masterFile.gzip,
           now: current.gzip,
-          diff: difference(masterFile.raw, current.gzip),
+          diff: difference(masterFile.gzip, current.gzip),
         };
         const hasChanges = raw.diff !== 0;
 
