@@ -191,10 +191,14 @@ async function main() {
   }
 
   if (!pull_request) {
-    // check for the latest commit in the history
-    const alreadyCheckedSizeByHistory = (latestRecord?.commitsha ?? '') === sha;
+    const recordForThisCommitIndex = historyFileContent.history.findIndex(
+      (record) => record.commitsha === sha,
+    );
+    const alreadyCheckedSizeByHistory = recordForThisCommitIndex !== -1;
 
-    if (!alreadyCheckedSizeByHistory) {
+    if (alreadyCheckedSizeByHistory) {
+      historyFileContent.history[recordForThisCommitIndex] = currentHistoryRecord;
+    } else {
       historyFileContent.history.unshift(currentHistoryRecord);
     }
 
@@ -215,6 +219,7 @@ async function main() {
     '>>',
     JSON.stringify(
       {
+        commits,
         files,
         list: filesSizes,
         pull_request,

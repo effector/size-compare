@@ -14669,7 +14669,7 @@ const HistoryFile = lib.Record({
     history: lib.Array(HistoryRecord),
 });
 function main() {
-    var _a, _b;
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         const gistId = (0,core.getInput)('gist_id', { required: true });
         const gistToken = (0,core.getInput)('gist_token', { required: true });
@@ -14804,9 +14804,12 @@ function main() {
             }
         }
         if (!pull_request) {
-            // check for the latest commit in the history
-            const alreadyCheckedSizeByHistory = ((_b = latestRecord === null || latestRecord === void 0 ? void 0 : latestRecord.commitsha) !== null && _b !== void 0 ? _b : '') === sha;
-            if (!alreadyCheckedSizeByHistory) {
+            const recordForThisCommitIndex = historyFileContent.history.findIndex((record) => record.commitsha === sha);
+            const alreadyCheckedSizeByHistory = recordForThisCommitIndex !== -1;
+            if (alreadyCheckedSizeByHistory) {
+                historyFileContent.history[recordForThisCommitIndex] = currentHistoryRecord;
+            }
+            else {
                 historyFileContent.history.unshift(currentHistoryRecord);
             }
             const updatedHistoryContent = JSON.stringify(historyFileContent, null, 2);
@@ -14821,6 +14824,7 @@ function main() {
             }
         }
         console.log('>>', JSON.stringify({
+            commits,
             files,
             list: filesSizes,
             pull_request,
