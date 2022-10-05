@@ -18,8 +18,6 @@ export default {
     babel({extensions, exclude: 'node_modules/**', babelHelpers: 'bundled'}),
     json(),
     resolve({extensions}),
-    commonjs({
-      include: /node_modules/,
-    }),
+    commonjs({include: /node_modules/}),
   ],
 };
