@@ -1,12 +1,31 @@
 'use strict';
 
+var path = require('path');
 var core = require('@actions/core');
 var github = require('@actions/github');
 
 function _interopDefaultLegacy (e) { return e && typeof e === 'object' && 'default' in e ? e : { 'default': e }; }
 
+function _interopNamespace(e) {
+  if (e && e.__esModule) return e;
+  var n = Object.create(null);
+  if (e) {
+    Object.keys(e).forEach(function (k) {
+      if (k !== 'default') {
+        var d = Object.getOwnPropertyDescriptor(e, k);
+        Object.defineProperty(n, k, d.get ? d : {
+          enumerable: true,
+          get: function () { return e[k]; }
+        });
+      }
+    });
+  }
+  n["default"] = e;
+  return Object.freeze(n);
+}
+
+var path__namespace = /*#__PURE__*/_interopNamespace(path);
 var core__default = /*#__PURE__*/_interopDefaultLegacy(core);
-var github__default = /*#__PURE__*/_interopDefaultLegacy(github);
 
 /**
  * @typedef Options
@@ -389,21 +408,33 @@ function toAlignment(value) {
     : 0
 }
 
-try {
-  // `who-to-greet` input defined in action metadata file
-  const nameToGreet = core__default["default"].getInput('who-to-greet');
-  console.log(`Hello ${nameToGreet}!`);
+async function main() {
+  core__default["default"].getInput('gist-id', {
+    required: true
+  });
+  const token = core__default["default"].getInput('token', {
+    required: true
+  });
+  path__namespace.resolve(process.cwd(), core__default["default"].getInput('bundle-directory', {
+    required: true
+  }));
+  core__default["default"].getInput('main-branch');
+  core__default["default"].getInput('include');
+  core__default["default"].getInput('exclude');
+  github.getOctokit(token);
   const time = new Date().toTimeString();
   core__default["default"].setOutput('time', time); // Get the JSON webhook payload for the event that triggered the workflow
 
-  const payload = JSON.stringify(github__default["default"].context.payload, undefined, 2);
+  const payload = JSON.stringify(github.context.payload, undefined, 2);
   console.log(`The event payload: ${payload}`);
   console.log(markdownTable([['Branch', 'Commit'], ['main', 'asdasda']]));
-} catch (error) {
+}
+
+main().catch(error => {
   if (error instanceof Error) {
     core__default["default"].setFailed(error.message);
   } else {
     core__default["default"].setFailed(String(error));
   }
-}
+});
 //# sourceMappingURL=main.js.map
