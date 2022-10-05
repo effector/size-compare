@@ -17,7 +17,29 @@ async function main() {
 
   const octokit = getOctokit(token);
 
-  const {} = context;
+  const {
+    payload: {pull_request, repository},
+    repo,
+    sha,
+    action,
+    eventName,
+  } = context;
+
+  console.log(
+    '>>',
+    JSON.stringify(
+      {
+        pull_request,
+        repository,
+        repo,
+        sha,
+        action,
+        eventName,
+      },
+      null,
+      2,
+    ),
+  );
 
   const time = new Date().toTimeString();
   setOutput('time', time);

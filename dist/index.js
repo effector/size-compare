@@ -10110,7 +10110,15 @@ function main() {
         const include = (0,core.getInput)('include');
         const exclude = (0,core.getInput)('exclude');
         const octokit = (0,github.getOctokit)(token);
-        const {} = github.context;
+        const { payload: { pull_request, repository }, repo, sha, action, eventName, } = github.context;
+        console.log('>>', JSON.stringify({
+            pull_request,
+            repository,
+            repo,
+            sha,
+            action,
+            eventName,
+        }, null, 2));
         const time = new Date().toTimeString();
         (0,core.setOutput)('time', time);
         // Get the JSON webhook payload for the event that triggered the workflow
