@@ -32,7 +32,7 @@ const HistoryFile = t.Record({
 async function main() {
   const gistId = getInput('gist_id', {required: true});
   const gistToken = getInput('gist_token', {required: true});
-  const githubToken = getInput('github_token', {required: false}) ?? gistToken;
+  const githubToken = getInput('github_token', {required: false}) || gistToken;
   const files = getInput('files', {required: true});
 
   const {

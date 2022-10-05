@@ -14669,11 +14669,11 @@ const HistoryFile = lib.Record({
     history: lib.Array(HistoryRecord),
 });
 function main() {
-    var _a, _b, _c;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
         const gistId = (0,core.getInput)('gist_id', { required: true });
         const gistToken = (0,core.getInput)('gist_token', { required: true });
-        const githubToken = (_a = (0,core.getInput)('github_token', { required: false })) !== null && _a !== void 0 ? _a : gistToken;
+        const githubToken = (0,core.getInput)('github_token', { required: false }) || gistToken;
         const files = (0,core.getInput)('files', { required: true });
         const { payload: { pull_request, repository, compare: compareLink, commits }, repo: { owner, repo }, sha, eventName, ref, } = github.context;
         const masterBranch = repository === null || repository === void 0 ? void 0 : repository.master_branch;
@@ -14716,7 +14716,7 @@ function main() {
         const latestRecord = historyFileContent.history[0];
         if (pull_request) {
             const previousCommentPromise = fetchPreviousComment(baseOctokit, { owner, repo }, { number: pull_request.number });
-            const masterFiles = Object.assign({}, ((_b = latestRecord === null || latestRecord === void 0 ? void 0 : latestRecord.files) !== null && _b !== void 0 ? _b : {}));
+            const masterFiles = Object.assign({}, ((_a = latestRecord === null || latestRecord === void 0 ? void 0 : latestRecord.files) !== null && _a !== void 0 ? _a : {}));
             const prFiles = recordToList(currentHistoryRecord.files, 'path', 'size');
             const changes = [];
             prFiles.forEach(({ path, size }) => {
@@ -14805,7 +14805,7 @@ function main() {
         }
         if (!pull_request) {
             // check for the latest commit in the history
-            const alreadyCheckedSizeByHistory = ((_c = latestRecord === null || latestRecord === void 0 ? void 0 : latestRecord.commitsha) !== null && _c !== void 0 ? _c : '') === sha;
+            const alreadyCheckedSizeByHistory = ((_b = latestRecord === null || latestRecord === void 0 ? void 0 : latestRecord.commitsha) !== null && _b !== void 0 ? _b : '') === sha;
             if (!alreadyCheckedSizeByHistory) {
                 historyFileContent.history.unshift(currentHistoryRecord);
             }
