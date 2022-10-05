@@ -9676,35 +9676,6 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 	}
 /******/ 	
 /************************************************************************/
-/******/ 	/* webpack/runtime/compat get default export */
-/******/ 	(() => {
-/******/ 		// getDefaultExport function for compatibility with non-harmony modules
-/******/ 		__nccwpck_require__.n = (module) => {
-/******/ 			var getter = module && module.__esModule ?
-/******/ 				() => (module['default']) :
-/******/ 				() => (module);
-/******/ 			__nccwpck_require__.d(getter, { a: getter });
-/******/ 			return getter;
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/define property getters */
-/******/ 	(() => {
-/******/ 		// define getter functions for harmony exports
-/******/ 		__nccwpck_require__.d = (exports, definition) => {
-/******/ 			for(var key in definition) {
-/******/ 				if(__nccwpck_require__.o(definition, key) && !__nccwpck_require__.o(exports, key)) {
-/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
-/******/ 				}
-/******/ 			}
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
-/******/ 	(() => {
-/******/ 		__nccwpck_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
-/******/ 	})();
-/******/ 	
 /******/ 	/* webpack/runtime/make namespace object */
 /******/ 	(() => {
 /******/ 		// define __esModule on exports
@@ -9732,7 +9703,6 @@ __nccwpck_require__.r(__webpack_exports__);
 var external_path_ = __nccwpck_require__(1017);
 // EXTERNAL MODULE: ./node_modules/.pnpm/@actions+core@1.10.0/node_modules/@actions/core/lib/core.js
 var core = __nccwpck_require__(7954);
-var core_default = /*#__PURE__*/__nccwpck_require__.n(core);
 // EXTERNAL MODULE: ./node_modules/.pnpm/@actions+github@5.1.1/node_modules/@actions/github/lib/github.js
 var github = __nccwpck_require__(9939);
 ;// CONCATENATED MODULE: ./node_modules/.pnpm/markdown-table@3.0.2/node_modules/markdown-table/index.js
@@ -10133,16 +10103,16 @@ var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _argume
 
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
-        const gistId = core_default().getInput('gist-id', { required: true });
-        const token = core_default().getInput('token', { required: true });
-        const bundleDirectory = external_path_.resolve(process.cwd(), core_default().getInput('bundle-directory', { required: true }));
-        const mainBranch = core_default().getInput('main-branch');
-        const include = core_default().getInput('include');
-        const exclude = core_default().getInput('exclude');
+        const gistId = (0,core.getInput)('gist-id', { required: true });
+        const token = (0,core.getInput)('token', { required: true });
+        const bundleDirectory = external_path_.resolve(process.cwd(), (0,core.getInput)('bundle-directory', { required: true }));
+        const mainBranch = (0,core.getInput)('main-branch');
+        const include = (0,core.getInput)('include');
+        const exclude = (0,core.getInput)('exclude');
         const octokit = (0,github.getOctokit)(token);
         const {} = github.context;
         const time = new Date().toTimeString();
-        core_default().setOutput('time', time);
+        (0,core.setOutput)('time', time);
         // Get the JSON webhook payload for the event that triggered the workflow
         const payload = JSON.stringify(github.context.payload, undefined, 2);
         console.log(`The event payload: ${payload}`);
@@ -10154,10 +10124,10 @@ function main() {
 }
 main().catch((error) => {
     if (error instanceof Error) {
-        core_default().setFailed(error.message);
+        (0,core.setFailed)(error.message);
     }
     else {
-        core_default().setFailed(String(error));
+        (0,core.setFailed)(String(error));
     }
 });
 
