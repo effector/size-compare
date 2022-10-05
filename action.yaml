@@ -1,5 +1,8 @@
 name: 'Size Compare'
 description: 'Compare size of the built assets'
+branding:
+  icon: bar-chart-2
+  color: blue
 inputs:
   gist-id:
     description: Id of the GIST to save size to
