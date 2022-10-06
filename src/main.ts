@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as t from 'runtypes';
-import {getInput, setFailed} from '@actions/core';
+import {getInput, notice, setFailed} from '@actions/core';
 import {context, getOctokit} from '@actions/github';
 import {create as createGlob} from '@actions/glob';
 import {gzipSizeFromFile} from 'gzip-size';
@@ -12,6 +12,7 @@ const GIST_PACKAGE_VERSION = 0;
 
 const SIZE_COMPARE_HEADING =
   '## 🚛 [size-compare](https://github.com/effector/size-compare) report';
+const SIZE_COMPARE_HEADING_RAW = '🚛 size-compare report';
 
 const SizeCompareLiteral = t.Literal(GIST_PACKAGE_VERSION);
 
@@ -35,6 +36,23 @@ const HistoryFile = t.Record({
   'size-compare': SizeCompareLiteral,
   history: t.Array(HistoryRecord),
 });
+
+type ChangeState = 'modified' | 'added' | 'removed' | 'not changed';
+
+interface Change {
+  state: ChangeState;
+  path: string;
+  raw: {
+    before: number | null;
+    now: number | null;
+    diff: number | null;
+  };
+  gzip: {
+    before: number | null;
+    now: number | null;
+    diff: number | null;
+  };
+}
 
 async function main() {
   const gistId = getInput('gist_id', {required: true});
@@ -97,7 +115,7 @@ async function main() {
   const originalFileContent = historyFile.content;
   const historyFileContent = HistoryFile.check(JSON.parse(originalFileContent));
 
-  // Note: a history is written in reversed chronological order: the latest is the first
+  // Note: a history is written in reversed chronological order: the latest record is the first in the list
   const latestRecord = historyFileContent.history[0];
 
   if (pull_request) {
@@ -106,109 +124,10 @@ async function main() {
       {owner, repo},
       {number: pull_request.number},
     );
-    const masterFiles = {...(latestRecord?.files ?? {})};
-    const prFiles = recordToList(currentHistoryRecord.files, 'path', 'size');
 
-    type ChangeState = 'modified' | 'added' | 'removed' | 'not changed';
+    const changes = detectChanges(latestRecord, currentHistoryRecord);
 
-    interface Change {
-      state: ChangeState;
-      path: string;
-      raw: {
-        before: number | null;
-        now: number | null;
-        diff: number | null;
-      };
-      gzip: {
-        before: number | null;
-        now: number | null;
-        diff: number | null;
-      };
-    }
-
-    const changes: Change[] = [];
-
-    prFiles.forEach(({path, size: current}) => {
-      const masterFile = masterFiles[path];
-      if (typeof masterFile !== 'undefined') {
-        const raw = {
-          before: masterFile.raw,
-          now: current.raw,
-          diff: difference(masterFile.raw, current.raw),
-        };
-        const gzip = {
-          before: masterFile.gzip,
-          now: current.gzip,
-          diff: difference(masterFile.gzip, current.gzip),
-        };
-        const hasChanges = raw.diff !== 0;
-
-        if (hasChanges) {
-          changes.push({state: 'modified', path, raw, gzip});
-        } else {
-          changes.push({state: 'not changed', path, raw, gzip});
-        }
-        delete masterFiles[path];
-      } else {
-        changes.push({
-          state: 'added',
-          path,
-          raw: {before: null, now: current.raw, diff: null},
-          gzip: {before: null, now: current.gzip, diff: null},
-        });
-      }
-    });
-
-    recordToList(masterFiles, 'path', 'size').forEach(({path, size: masterFile}) => {
-      changes.push({
-        state: 'removed',
-        path,
-        raw: {
-          before: masterFile.raw,
-          now: null,
-          diff: null,
-        },
-        gzip: {
-          before: masterFile.gzip,
-          now: null,
-          diff: null,
-        },
-      });
-    });
-
-    const commentBody = [
-      SIZE_COMPARE_HEADING,
-      markdownTable([
-        ['File', '+/-', 'Base', 'Current', '+/- gzip', 'Base gzip', 'Current gzip'],
-        ...changes.map(({path, raw, gzip}) => {
-          return [
-            path,
-            applyExists(raw.diff, signedFixedPercent),
-            applyExists(raw.before, prettyBytes),
-            applyExists(raw.now, prettyBytes),
-            applyExists(gzip.diff, signedFixedPercent),
-            applyExists(gzip.before, prettyBytes),
-            applyExists(gzip.now, prettyBytes),
-          ];
-        }),
-      ]),
-    ].join('\r\n');
-
-    function difference(a: number, b: number): number {
-      return (Math.abs(a - b) / a) * Math.sign(b - a) * 100;
-    }
-
-    function signedFixedPercent(value: number): string {
-      if (value === 0) {
-        return '=';
-      }
-      return `${value > 0 ? '+' : ''}${value.toFixed(2)}%`;
-    }
-
-    function applyExists(value: number | null, fn: (value: number) => string) {
-      if (value === null) return '';
-      return fn(value);
-    }
+    const commentBody = [SIZE_COMPARE_HEADING, changesToMarkdownTable(changes)].join('\r\n');
 
     const previousComment = await previousCommentPromise;
 
@@ -243,7 +162,7 @@ async function main() {
     }
   }
 
-  if (!pull_request) {
+  if (!pull_request && ref === `refs/heads/${masterBranch}`) {
     const recordForThisCommitIndex = historyFileContent.history.findIndex(
       (record) => record.commitsha === sha,
     );
@@ -254,6 +173,11 @@ async function main() {
     } else {
       historyFileContent.history.unshift(currentHistoryRecord);
     }
+
+    const previousChanges =
+      historyFileContent.history[recordForThisCommitIndex - 1] ?? historyFileContent.history[0];
+    const changes = detectChanges(previousChanges, currentHistoryRecord);
+    reportNoticeForChanges(changes);
 
     const updatedHistoryContent = JSON.stringify(historyFileContent, null, 2);
     historyFile.content = updatedHistoryContent;
@@ -314,3 +238,101 @@ main().catch((error) => {
     setFailed(String(error));
   }
 });
+
+function difference(a: number, b: number): number {
+  return (Math.abs(a - b) / a) * Math.sign(b - a) * 100;
+}
+
+function signedFixedPercent(value: number): string {
+  if (value === 0) {
+    return '=';
+  }
+  return `${value > 0 ? '+' : ''}${value.toFixed(2)}%`;
+}
+
+function applyExists(value: number | null, fn: (value: number) => string) {
+  if (value === null) return '';
+  return fn(value);
+}
+
+function detectChanges(previous: HistoryRecord, current: HistoryRecord) {
+  const masterFiles = {...(previous?.files ?? {})};
+  const prFiles = recordToList(current.files, 'path', 'size');
+
+  const changes: Change[] = [];
+
+  prFiles.forEach(({path, size: current}) => {
+    const masterFile = masterFiles[path];
+    if (typeof masterFile !== 'undefined') {
+      const raw = {
+        before: masterFile.raw,
+        now: current.raw,
+        diff: difference(masterFile.raw, current.raw),
+      };
+      const gzip = {
+        before: masterFile.gzip,
+        now: current.gzip,
+        diff: difference(masterFile.gzip, current.gzip),
+      };
+      const hasChanges = raw.diff !== 0;
+
+      if (hasChanges) {
+        changes.push({state: 'modified', path, raw, gzip});
+      } else {
+        changes.push({state: 'not changed', path, raw, gzip});
+      }
+      delete masterFiles[path];
+    } else {
+      changes.push({
+        state: 'added',
+        path,
+        raw: {before: null, now: current.raw, diff: null},
+        gzip: {before: null, now: current.gzip, diff: null},
+      });
+    }
+  });
+
+  recordToList(masterFiles, 'path', 'size').forEach(({path, size: masterFile}) => {
+    changes.push({
+      state: 'removed',
+      path,
+      raw: {
+        before: masterFile.raw,
+        now: null,
+        diff: null,
+      },
+      gzip: {
+        before: masterFile.gzip,
+        now: null,
+        diff: null,
+      },
+    });
+  });
+
+  return changes;
+}
+
+function changesToMarkdownTable(changes: Change[]) {
+  return markdownTable([
+    ['File', '+/-', 'Base', 'Current', '+/- gzip', 'Base gzip', 'Current gzip'],
+    ...changes.map(({path, raw, gzip}) => {
+      return [
+        path,
+        applyExists(raw.diff, signedFixedPercent),
+        applyExists(raw.before, prettyBytes),
+        applyExists(raw.now, prettyBytes),
+        applyExists(gzip.diff, signedFixedPercent),
+        applyExists(gzip.before, prettyBytes),
+        applyExists(gzip.now, prettyBytes),
+      ];
+    }),
+  ]);
+}
+
+function reportNoticeForChanges(changes: Change[]) {
+  const significantChanges = changes.filter((change) => change.state !== 'not changed');
+  if (significantChanges.length > 0) {
+    const table = changesToMarkdownTable(significantChanges);
+    notice(table, {title: SIZE_COMPARE_HEADING_RAW});
+  }
+}
