@@ -157,7 +157,7 @@ async function main() {
 
     const commentBody = [
       SIZE_COMPARE_HEADING,
-      createCompareLink(repo, owner, latestRecord, currentHistoryRecord),
+      createCompareLink(owner, repo, latestRecord, currentHistoryRecord),
       changesToMarkdownTable(changes),
     ].join('\r\n');
 
@@ -240,7 +240,7 @@ async function main() {
       commit_sha: sha,
       body: [
         SIZE_COMPARE_HEADING,
-        createCompareLink(repo, owner, latestRecord, currentHistoryRecord),
+        createCompareLink(owner, repo, latestRecord, currentHistoryRecord),
         changesToMarkdownTable(changes),
       ].join('\r\n'),
     });
@@ -367,12 +367,12 @@ function detectChanges(previous: HistoryRecord, current: HistoryRecord) {
 }
 
 function createCompareLink(
-  repo: string,
   owner: string,
+  repo: string,
   before: HistoryRecord,
   current: HistoryRecord,
 ): string {
-  const link = `https://github.com/${repo}/${owner}/compare/${before.commitsha}...${current.commitsha}`;
+  const link = `https://github.com/${owner}/${repo}/compare/${before.commitsha}...${current.commitsha}`;
   return `Comparing [${before.commitsha.slice(0, 8)}...${current.commitsha.slice(0, 8)}](${link})`;
 }
 

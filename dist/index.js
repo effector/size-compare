@@ -14916,7 +14916,7 @@ function main() {
                 JSON.stringify(changes, null, 2));
             const commentBody = [
                 SIZE_COMPARE_HEADING,
-                createCompareLink(repo, owner, latestRecord, currentHistoryRecord),
+                createCompareLink(owner, repo, latestRecord, currentHistoryRecord),
                 changesToMarkdownTable(changes),
             ].join('\r\n');
             const previousComment = yield previousCommentPromise;
@@ -14985,7 +14985,7 @@ function main() {
                 commit_sha: sha,
                 body: [
                     SIZE_COMPARE_HEADING,
-                    createCompareLink(repo, owner, latestRecord, currentHistoryRecord),
+                    createCompareLink(owner, repo, latestRecord, currentHistoryRecord),
                     changesToMarkdownTable(changes),
                 ].join('\r\n'),
             });
@@ -15091,8 +15091,8 @@ function detectChanges(previous, current) {
     });
     return changes;
 }
-function createCompareLink(repo, owner, before, current) {
-    const link = `https://github.com/${repo}/${owner}/compare/${before.commitsha}...${current.commitsha}`;
+function createCompareLink(owner, repo, before, current) {
+    const link = `https://github.com/${owner}/${repo}/compare/${before.commitsha}...${current.commitsha}`;
     return `Comparing [${before.commitsha.slice(0, 8)}...${current.commitsha.slice(0, 8)}](${link})`;
 }
 function changesToMarkdownTable(changes) {
