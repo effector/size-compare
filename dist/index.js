@@ -15105,7 +15105,8 @@ function reportNoticeForChanges(changes) {
     const significantChanges = changes.filter((change) => change.state !== 'not changed');
     if (significantChanges.length > 0) {
         const table = changesToMarkdownTable(significantChanges);
-        (0,core.notice)(table, { title: SIZE_COMPARE_HEADING_RAW });
+        const content = `This commit add changes to bundle size:\r\n${table}`;
+        (0,core.notice)(content, { title: SIZE_COMPARE_HEADING_RAW });
     }
 }
 
