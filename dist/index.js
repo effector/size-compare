@@ -14914,10 +14914,12 @@ function main() {
             const changes = detectChanges(latestRecord, currentHistoryRecord);
             (0,core.debug)(`Found changes between ${latestRecord.commitsha} and ${currentHistoryRecord.commitsha} in files: ` +
                 JSON.stringify(changes, null, 2));
+            const { significant: significantChanges, rest: foldedChanges } = findSignificantChanges(changes);
             const commentBody = [
                 SIZE_COMPARE_HEADING,
                 createCompareLink(owner, repo, latestRecord, currentHistoryRecord),
-                changesToMarkdownTable(changes),
+                changesToMarkdownTable(significantChanges),
+                createCollapsibleMarkdown(`Files wasn't changed`, changesToMarkdownTable(foldedChanges)),
             ].join('\r\n');
             const previousComment = yield previousCommentPromise;
             if (previousComment) {
@@ -15111,9 +15113,28 @@ function changesToMarkdownTable(changes) {
         }),
     ]);
 }
+function createCollapsibleMarkdown(title, content) {
+    return `<details>
+<summary>${title}</summary>
+
+${content}
+
+</details>`;
+}
+function findSignificantChanges(changes) {
+    const significant = [];
+    const rest = [];
+    changes.forEach((change) => {
+        if (change.state !== 'not changed')
+            significant.push(change);
+        else
+            rest.push(change);
+    });
+    return { significant, rest };
+}
 function reportNoticeForChanges(changes) {
     return __awaiter(this, void 0, void 0, function* () {
-        const significantChanges = changes.filter((change) => change.state !== 'not changed');
+        const { significant: significantChanges } = findSignificantChanges(changes);
         if (significantChanges.length > 0) {
             const table = changesToMarkdownTable(significantChanges);
             const content = `This commit add changes to bundle size:\r\n${table}`;
