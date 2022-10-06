@@ -14918,8 +14918,10 @@ function main() {
             const commentBody = [
                 SIZE_COMPARE_HEADING,
                 createCompareLink(owner, repo, latestRecord, currentHistoryRecord),
-                changesToMarkdownTable(significantChanges),
-                createCollapsibleMarkdown(`Files wasn't changed`, changesToMarkdownTable(foldedChanges)),
+                significantChanges.length > 0 ? changesToMarkdownTable(significantChanges) : '',
+                foldedChanges.length > 0
+                    ? createCollapsibleMarkdown(`Files wasn't changed`, changesToMarkdownTable(foldedChanges))
+                    : '',
             ].join('\r\n');
             const previousComment = yield previousCommentPromise;
             if (previousComment) {
