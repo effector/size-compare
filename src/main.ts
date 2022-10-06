@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as t from 'runtypes';
-import {getInput, notice, setFailed} from '@actions/core';
+import {debug, getInput, notice, setFailed} from '@actions/core';
 import {context, getOctokit} from '@actions/github';
 import {create as createGlob} from '@actions/glob';
 import {gzipSizeFromFile} from 'gzip-size';
@@ -70,6 +70,24 @@ async function main() {
 
   const masterBranch = repository?.master_branch;
 
+  debug(
+    'Start: ' +
+      JSON.stringify(
+        {
+          eventName,
+          sha,
+          owner,
+          repo,
+          ref,
+          masterBranch,
+          compareLink,
+          commits,
+        },
+        null,
+        2,
+      ),
+  );
+
   const globber = await createGlob(files, {omitBrokenSymbolicLinks: true});
   const foundFilesList = await globber.glob();
   const filesSizes = await Promise.all(
@@ -81,6 +99,9 @@ async function main() {
       gzip: await gzipSizeFromFile(path),
     })),
   );
+
+  debug(`Filter "${files.split('\n').join(', ')}" resolved to: ` + foundFilesList.join('\n'));
+  debug('Files resolved to sizes: ' + JSON.stringify(filesSizes, null, 2));
 
   const gistOctokit = getOctokit(gistToken);
   const baseOctokit = getOctokit(githubToken);
@@ -107,6 +128,7 @@ async function main() {
       filesSizes.map((file) => [file.name, {raw: file.size, gzip: file.gzip}]),
     ),
   };
+  debug('Made current history record: ' + JSON.stringify(currentHistoryRecord, null, 2));
 
   const historyFile = getOrCreate(gistFiles, GIST_HISTORY_FILE_NAME, {
     filename: GIST_HISTORY_FILE_NAME,
@@ -117,8 +139,10 @@ async function main() {
 
   // Note: a history is written in reversed chronological order: the latest record is the first in the list
   const latestRecord = historyFileContent.history[0];
+  debug('Latest record resolved: ' + JSON.stringify(latestRecord, null, 2));
 
   if (pull_request) {
+    debug('Start Pull Request scenario');
     const previousCommentPromise = fetchPreviousComment(
       baseOctokit,
       {owner, repo},
@@ -126,12 +150,17 @@ async function main() {
     );
 
     const changes = detectChanges(latestRecord, currentHistoryRecord);
+    debug(
+      `Found changes between ${latestRecord.commitsha} and ${currentHistoryRecord.commitsha} in files: ` +
+        JSON.stringify(changes, null, 2),
+    );
 
     const commentBody = [SIZE_COMPARE_HEADING, changesToMarkdownTable(changes)].join('\r\n');
 
     const previousComment = await previousCommentPromise;
 
     if (previousComment) {
+      debug('Found previous comment in PR:' + JSON.stringify(previousComment, null, 2));
       try {
         await baseOctokit.rest.issues.updateComment({
           repo,
@@ -146,6 +175,7 @@ async function main() {
         );
       }
     } else {
+      debug('No previous comment found. Creating new');
       try {
         await baseOctokit.rest.issues.createComment({
           repo,
@@ -163,20 +193,27 @@ async function main() {
   }
 
   if (!pull_request && ref === `refs/heads/${masterBranch}`) {
+    debug(`Not pull request and current branch "${ref}" is the master "${masterBranch}"`);
     const recordForThisCommitIndex = historyFileContent.history.findIndex(
       (record) => record.commitsha === sha,
     );
     const alreadyCheckedSizeByHistory = recordForThisCommitIndex !== -1;
 
     if (alreadyCheckedSizeByHistory) {
+      debug(`For the commit ${sha} size was already checked`);
       historyFileContent.history[recordForThisCommitIndex] = currentHistoryRecord;
     } else {
+      debug(`Create new history record for the ${sha} commit`);
       historyFileContent.history.unshift(currentHistoryRecord);
     }
 
     const previousChanges =
       historyFileContent.history[recordForThisCommitIndex - 1] ?? historyFileContent.history[0];
     const changes = detectChanges(previousChanges, currentHistoryRecord);
+    debug(
+      `Detected changes for commits between ${previousChanges.commitsha} and ${currentHistoryRecord.commitsha}:` +
+        JSON.stringify(changes, null, 2),
+    );
     reportNoticeForChanges(changes);
 
     const updatedHistoryContent = JSON.stringify(historyFileContent, null, 2);
@@ -184,11 +221,13 @@ async function main() {
 
     // Do not commit GIST if no changes
     if (updatedHistoryContent !== originalFileContent) {
-      console.log('History changed, updating GIST');
+      debug('History changed, updating GIST');
       await gistOctokit.rest.gists.update({
         gist_id: gistId,
         files: gistFiles,
       });
+    } else {
+      debug('Looks like there is no changes in the history');
     }
   }
 }
