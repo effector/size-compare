@@ -9,10 +9,10 @@ inputs:
     required: true
   gist_token:
     description: A personal access token with "gist" permission. Should be stored as a Secret.
-    required: true
+    required: false
   github_token:
     description: A personal access token with "github" permission. Should be used standard token.
-    required: false
+    required: true
   files:
     description: A glob pattern where to find bundle files compare size for
     required: true

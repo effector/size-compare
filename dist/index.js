@@ -14847,8 +14847,8 @@ function main() {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
         const gistId = (0,core.getInput)('gist_id', { required: true });
-        const gistToken = (0,core.getInput)('gist_token', { required: true });
-        const githubToken = (0,core.getInput)('github_token', { required: false }) || gistToken;
+        const githubToken = (0,core.getInput)('github_token', { required: true });
+        const gistToken = (0,core.getInput)('gist_token', { required: false }) || githubToken;
         const files = (0,core.getInput)('files', { required: true });
         const { payload: { pull_request, repository, compare: compareLink, commits }, repo: { owner, repo }, sha, eventName, ref, } = github.context;
         const masterBranch = repository === null || repository === void 0 ? void 0 : repository.master_branch;

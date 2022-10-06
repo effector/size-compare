@@ -43,9 +43,9 @@ jobs:
 
 ## Inputs
 
-| Name           | Required | Description                                                                                                                    |
-| -------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| `gist_id`      | Yes      | Identifier of the GIST to save size history to                                                                                 |
-| `gist_token`   | Yes      | Personal Access Token to read/write hist                                                                                       |
-| `github_token` | No       | Token used to post comments for PRs. If not passed, comments posted from the `gist_token` owner name                           |
-| `files`        | Yes      | List of [glob patterns](https://github.com/actions/toolkit/tree/main/packages/glob#patterns) of files must be checked for size |
+| Name           | Required | Description                                                                                                                     |
+| -------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `gist_id`      | Yes      | Identifier of the GIST to save size history to                                                                                  |
+| `gist_token`   | No       | Personal Access Token to read/write hist. If not passed `github_token` will be used. Useful for PRs from external contributors. |
+| `github_token` | Yes      | Token used to post comments for PRs.                                                                                            |
+| `files`        | Yes      | List of [glob patterns](https://github.com/actions/toolkit/tree/main/packages/glob#patterns) of files must be checked for size  |
