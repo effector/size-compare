@@ -31,7 +31,7 @@ jobs:
       # Add here your setup, installation, and build steps
 
       - name: 🚛 Size compare
-        uses: effector/size-compare@v1.0.0
+        uses: effector/size-compare@v1.1.0
         with:
           gist_id: ${{ secrets.SIZE_HISTORY_GIST_ID }}
           gist_token: ${{ secrets.SIZE_COMPARE_TOKEN }}
