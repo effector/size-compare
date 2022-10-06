@@ -155,7 +155,11 @@ async function main() {
         JSON.stringify(changes, null, 2),
     );
 
-    const commentBody = [SIZE_COMPARE_HEADING, changesToMarkdownTable(changes)].join('\r\n');
+    const commentBody = [
+      SIZE_COMPARE_HEADING,
+      createCompareLink(repo, owner, latestRecord, currentHistoryRecord),
+      changesToMarkdownTable(changes),
+    ].join('\r\n');
 
     const previousComment = await previousCommentPromise;
 
@@ -197,6 +201,8 @@ async function main() {
     const recordForThisCommitIndex = historyFileContent.history.findIndex(
       (record) => record.commitsha === sha,
     );
+    const previousChanges =
+      historyFileContent.history[recordForThisCommitIndex - 1] ?? historyFileContent.history[0];
     const alreadyCheckedSizeByHistory = recordForThisCommitIndex !== -1;
 
     if (alreadyCheckedSizeByHistory) {
@@ -207,8 +213,6 @@ async function main() {
       historyFileContent.history.unshift(currentHistoryRecord);
     }
 
-    const previousChanges =
-      historyFileContent.history[recordForThisCommitIndex - 1] ?? historyFileContent.history[0];
     const changes = detectChanges(previousChanges, currentHistoryRecord);
     debug(
       `Detected changes for commits between ${previousChanges.commitsha} and ${currentHistoryRecord.commitsha}:` +
@@ -349,6 +353,16 @@ function detectChanges(previous: HistoryRecord, current: HistoryRecord) {
   });
 
   return changes;
+}
+
+function createCompareLink(
+  repo: string,
+  owner: string,
+  before: HistoryRecord,
+  current: HistoryRecord,
+): string {
+  const link = `https://github.com/${repo}/${owner}/compare/${before.commitsha}...${current.commitsha}`;
+  return `Comparing [${before.commitsha.slice(0, 8)}...${current.commitsha.slice(0, 8)}](${link})`;
 }
 
 function changesToMarkdownTable(changes: Change[]) {

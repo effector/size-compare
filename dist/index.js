@@ -14914,7 +14914,11 @@ function main() {
             const changes = detectChanges(latestRecord, currentHistoryRecord);
             (0,core.debug)(`Found changes between ${latestRecord.commitsha} and ${currentHistoryRecord.commitsha} in files: ` +
                 JSON.stringify(changes, null, 2));
-            const commentBody = [SIZE_COMPARE_HEADING, changesToMarkdownTable(changes)].join('\r\n');
+            const commentBody = [
+                SIZE_COMPARE_HEADING,
+                createCompareLink(repo, owner, latestRecord, currentHistoryRecord),
+                changesToMarkdownTable(changes),
+            ].join('\r\n');
             const previousComment = yield previousCommentPromise;
             if (previousComment) {
                 (0,core.debug)('Found previous comment in PR:' + JSON.stringify(previousComment, null, 2));
@@ -14948,6 +14952,7 @@ function main() {
         if (!pull_request && ref === `refs/heads/${masterBranch}`) {
             (0,core.debug)(`Not pull request and current branch "${ref}" is the master "${masterBranch}"`);
             const recordForThisCommitIndex = historyFileContent.history.findIndex((record) => record.commitsha === sha);
+            const previousChanges = (_a = historyFileContent.history[recordForThisCommitIndex - 1]) !== null && _a !== void 0 ? _a : historyFileContent.history[0];
             const alreadyCheckedSizeByHistory = recordForThisCommitIndex !== -1;
             if (alreadyCheckedSizeByHistory) {
                 (0,core.debug)(`For the commit ${sha} size was already checked`);
@@ -14957,7 +14962,6 @@ function main() {
                 (0,core.debug)(`Create new history record for the ${sha} commit`);
                 historyFileContent.history.unshift(currentHistoryRecord);
             }
-            const previousChanges = (_a = historyFileContent.history[recordForThisCommitIndex - 1]) !== null && _a !== void 0 ? _a : historyFileContent.history[0];
             const changes = detectChanges(previousChanges, currentHistoryRecord);
             (0,core.debug)(`Detected changes for commits between ${previousChanges.commitsha} and ${currentHistoryRecord.commitsha}:` +
                 JSON.stringify(changes, null, 2));
@@ -15076,6 +15080,10 @@ function detectChanges(previous, current) {
         });
     });
     return changes;
+}
+function createCompareLink(repo, owner, before, current) {
+    const link = `https://github.com/${repo}/${owner}/compare/${before.commitsha}...${current.commitsha}`;
+    return `Comparing [${before.commitsha.slice(0, 8)}...${current.commitsha.slice(0, 8)}](${link})`;
 }
 function changesToMarkdownTable(changes) {
     return markdownTable([
