@@ -14965,7 +14965,6 @@ function main() {
             const changes = detectChanges(previousChanges, currentHistoryRecord);
             (0,core.debug)(`Detected changes for commits between ${previousChanges.commitsha} and ${currentHistoryRecord.commitsha}:` +
                 JSON.stringify(changes, null, 2));
-            reportNoticeForChanges(changes);
             const updatedHistoryContent = JSON.stringify(historyFileContent, null, 2);
             historyFile.content = updatedHistoryContent;
             // Do not commit GIST if no changes
@@ -14979,6 +14978,17 @@ function main() {
             else {
                 (0,core.debug)('Looks like there is no changes in the history');
             }
+            yield reportNoticeForChanges(changes);
+            yield baseOctokit.rest.repos.createCommitComment({
+                repo,
+                owner,
+                commit_sha: sha,
+                body: [
+                    SIZE_COMPARE_HEADING,
+                    createCompareLink(repo, owner, latestRecord, currentHistoryRecord),
+                    changesToMarkdownTable(changes),
+                ].join('\r\n'),
+            });
         }
     });
 }
@@ -15102,12 +15112,14 @@ function changesToMarkdownTable(changes) {
     ]);
 }
 function reportNoticeForChanges(changes) {
-    const significantChanges = changes.filter((change) => change.state !== 'not changed');
-    if (significantChanges.length > 0) {
-        const table = changesToMarkdownTable(significantChanges);
-        const content = `This commit add changes to bundle size:\r\n${table}`;
-        (0,core.notice)(content, { title: SIZE_COMPARE_HEADING_RAW });
-    }
+    return __awaiter(this, void 0, void 0, function* () {
+        const significantChanges = changes.filter((change) => change.state !== 'not changed');
+        if (significantChanges.length > 0) {
+            const table = changesToMarkdownTable(significantChanges);
+            const content = `This commit add changes to bundle size:\r\n${table}`;
+            (0,core.notice)(content, { title: SIZE_COMPARE_HEADING_RAW });
+        }
+    });
 }
 
 })();

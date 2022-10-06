@@ -218,7 +218,6 @@ async function main() {
       `Detected changes for commits between ${previousChanges.commitsha} and ${currentHistoryRecord.commitsha}:` +
         JSON.stringify(changes, null, 2),
     );
-    reportNoticeForChanges(changes);
 
     const updatedHistoryContent = JSON.stringify(historyFileContent, null, 2);
     historyFile.content = updatedHistoryContent;
@@ -233,6 +232,18 @@ async function main() {
     } else {
       debug('Looks like there is no changes in the history');
     }
+
+    await reportNoticeForChanges(changes);
+    await baseOctokit.rest.repos.createCommitComment({
+      repo,
+      owner,
+      commit_sha: sha,
+      body: [
+        SIZE_COMPARE_HEADING,
+        createCompareLink(repo, owner, latestRecord, currentHistoryRecord),
+        changesToMarkdownTable(changes),
+      ].join('\r\n'),
+    });
   }
 }
 
@@ -382,7 +393,7 @@ function changesToMarkdownTable(changes: Change[]) {
   ]);
 }
 
-function reportNoticeForChanges(changes: Change[]) {
+async function reportNoticeForChanges(changes: Change[]) {
   const significantChanges = changes.filter((change) => change.state !== 'not changed');
   if (significantChanges.length > 0) {
     const table = changesToMarkdownTable(significantChanges);
